@@ -13,7 +13,7 @@ pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
   r"^\d+"           => TokenType::Literal(DataType::Integer),
 
   // Strings
-  r#"^"[^"]*""#     => TokenType::Literal(DataType::String),
+  r#"^"([^"]*)""#   => TokenType::Literal(DataType::String),
 );
 
 #[derive(Debug)]

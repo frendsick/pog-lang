@@ -1,4 +1,4 @@
-use regex::{Match,Regex};
+use regex::{Captures,Match,Regex};
 use crate::defs::{TOKEN_REGEXES,Token,TokenType};
 
 #[derive(Debug)]
@@ -42,13 +42,19 @@ impl<'a> Tokenizer<'a> {
     // Test if the remaining code matches with any Token regex
     let unparsed_code: &str = self.code.split_at(self.cursor).1;
     for (regex, token_type) in TOKEN_REGEXES.entries() {
-      let matches: Option<Match> = Regex::new(regex).unwrap().find(unparsed_code);
-      if !matches.is_none() {
+      let captures: Option<Captures> = Regex::new(regex).unwrap().captures(unparsed_code);
+      if !captures.is_none() {
         // Move cursor to the end of the parsed Token
-        self.cursor += matches.unwrap().end();
+        self.cursor += captures.as_ref().unwrap().get(0).unwrap().end();
 
         // Token should be skipped, e.g. whitespace or comment
         if token_type == &TokenType::None { return self.get_next_token() }
+
+        // Take match from capture group if it is explicitly specified
+        let mut matches: Option<Match> = captures.as_ref().unwrap().get(1);
+        if matches.is_none() {
+          matches = captures.unwrap().get(0);
+        }
 
         return Some(Token {
           typ: token_type,
