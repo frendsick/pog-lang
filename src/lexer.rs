@@ -154,8 +154,8 @@ mod tests {
     let operator_count: usize = count_token_types(TokenType::AssignmentOperator);
     assert_eq!(operator_count, 5, "Exhaustive testing of AssignmentOperators");
 
-    let keywords: &str = "= += -= *= /=";
-    let mut parser: Parser = Parser::init(keywords);
+    let operators: &str = "= += -= *= /=";
+    let mut parser: Parser = Parser::init(operators);
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
       Token::new(&TokenType::AssignmentOperator, "="),
@@ -167,7 +167,23 @@ mod tests {
   }
 
   #[test]
-  fn test_lexing_assignment() {
+  fn test_lexing_unary_operators() {
+    let operator_count: usize = count_token_types(TokenType::UnaryOperator);
+    assert_eq!(operator_count, 4, "Exhaustive testing of UnaryOperators");
+
+    let operators: &str = "++ -- & !";
+    let mut parser: Parser = Parser::init(operators);
+    let tokens: Vec<Token> = parser.parse();
+    assert_eq!( tokens, vec![
+      Token::new(&TokenType::UnaryOperator, "++"),
+      Token::new(&TokenType::UnaryOperator, "--"),
+      Token::new(&TokenType::UnaryOperator, "&"),
+      Token::new(&TokenType::UnaryOperator, "!"),
+    ]);
+  }
+
+  #[test]
+  fn test_lexing_assignment_statement() {
     let mut parser: Parser = Parser::init("a += 42;");
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
