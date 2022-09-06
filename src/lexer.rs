@@ -1,5 +1,5 @@
 use regex::{Captures,Match,Regex};
-use crate::defs::{TOKEN_REGEXES,Token,TokenType};
+use crate::defs::{TOKEN_REGEXES,DataType,Token,TokenType};
 
 #[derive(Debug)]
 pub(crate) struct Parser<'a> {
@@ -44,17 +44,21 @@ impl<'a> Tokenizer<'a> {
     for (regex, token_type) in TOKEN_REGEXES.entries() {
       let captures: Option<Captures> = Regex::new(regex).unwrap().captures(unparsed_code);
       if !captures.is_none() {
-        // Move cursor to the end of the parsed Token
-        self.cursor += captures.as_ref().unwrap().get(0).unwrap().end();
-
-        // Token should be skipped, e.g. whitespace or comment
-        if token_type == &TokenType::None { return self.get_next_token() }
 
         // Take match from capture group if it is explicitly specified
         let mut matches: Option<Match> = captures.as_ref().unwrap().get(1);
         if matches.is_none() {
           matches = captures.unwrap().get(0);
         }
+
+        // Move cursor to the end of the parsed Token
+        self.cursor += matches.unwrap().end();
+
+        // Token should be skipped, e.g. whitespace or comment
+        if token_type == &TokenType::None { return self.get_next_token() }
+
+        // Go over the starting and ending character for certain Tokens
+        if token_type == &TokenType::Literal(DataType::String) { self.cursor += 2 };
 
         return Some(Token {
           typ: token_type,
