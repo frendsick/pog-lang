@@ -112,7 +112,7 @@ mod tests {
     let tokens: Vec<Token> = parser.parse();
     dbg!(&tokens);
     assert_eq!( tokens, vec![
-      Token::new(&TokenType::Label, "a"),
+      Token::new(&TokenType::Identifier, "a"),
       Token::new(&TokenType::AssignmentOperator, "+="),
       Token::new(&TokenType::Literal(DataType::Integer), "42"),
       Token::new(&TokenType::Delimiter, ";")

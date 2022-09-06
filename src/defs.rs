@@ -66,8 +66,8 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   r"^;"             => TokenType::Delimiter,
   r"^->"            => TokenType::Delimiter,
 
-  // Labels - Named value representing some value or other entity
-  r"^[a-zA-Z_$][a-zA-Z_$0-9]*"  => TokenType::Label,
+  // Identifier - Named value representing some value or other entity
+  r"^[a-zA-Z_$][a-zA-Z_$0-9]*"  => TokenType::Identifier,
 );
 
 #[derive(Debug, PartialEq)]
@@ -88,7 +88,7 @@ pub(crate) enum TokenType {
   BinaryOperator,
   DataType,
   Delimiter,
-  Label,
+  Identifier,
   Literal(DataType),
   Keyword,
   UnaryOperator,
