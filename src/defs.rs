@@ -36,6 +36,12 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   r"^\*="           => TokenType::AssignmentOperator,   // Multiplication assignment
   r"^/="            => TokenType::AssignmentOperator,   // Division assignment
 
+  // Unary Operators
+  r"^\+\+"          => TokenType::UnaryOperator,    // Increment
+  r"^--"            => TokenType::UnaryOperator,    // Decrement
+  r"^&"             => TokenType::UnaryOperator,    // Address
+  r"^!"             => TokenType::UnaryOperator,    // Logical negation
+
   // Binary Operators
   r"^\+"            => TokenType::BinaryOperator,   // Addition
   r"^/"             => TokenType::BinaryOperator,   // Division
@@ -47,12 +53,6 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   r"^\*"            => TokenType::BinaryOperator,   // Multiplication
   r"^!="            => TokenType::BinaryOperator,   // NotEquals
   r"^-"             => TokenType::BinaryOperator,   // Substraction
-
-  // Unary Operators
-  r"^\+\+"          => TokenType::UnaryOperator,    // Increment
-  r"^--"            => TokenType::UnaryOperator,    // Decrement
-  r"^&"             => TokenType::UnaryOperator,    // Address
-  r"^!"             => TokenType::UnaryOperator,    // Logical negation
 
   // Delimiters
   r"^\}"            => TokenType::Delimiter,
