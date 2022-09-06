@@ -40,7 +40,7 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   r"^\+\+"          => TokenType::UnaryOperator,    // Increment
   r"^--"            => TokenType::UnaryOperator,    // Decrement
   r"^&"             => TokenType::UnaryOperator,    // Address
-  r"^!"             => TokenType::UnaryOperator,    // Logical negation
+  r"^(!)[^=]"       => TokenType::UnaryOperator,    // Logical negation
 
   // Binary Operators
   r"^\+"            => TokenType::BinaryOperator,   // Addition
