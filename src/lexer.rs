@@ -150,6 +150,23 @@ mod tests {
   }
 
   #[test]
+  fn test_lexing_assignment_operators() {
+    let operator_count: usize = count_token_types(TokenType::AssignmentOperator);
+    assert_eq!(operator_count, 5, "Exhaustive testing of AssignmentOperators");
+
+    let keywords: &str = "= += -= *= /=";
+    let mut parser: Parser = Parser::init(keywords);
+    let tokens: Vec<Token> = parser.parse();
+    assert_eq!( tokens, vec![
+      Token::new(&TokenType::AssignmentOperator, "="),
+      Token::new(&TokenType::AssignmentOperator, "+="),
+      Token::new(&TokenType::AssignmentOperator, "-="),
+      Token::new(&TokenType::AssignmentOperator, "*="),
+      Token::new(&TokenType::AssignmentOperator, "/="),
+    ]);
+  }
+
+  #[test]
   fn test_lexing_assignment() {
     let mut parser: Parser = Parser::init("a += 42;");
     let tokens: Vec<Token> = parser.parse();
