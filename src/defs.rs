@@ -42,18 +42,6 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   r"^&"             => TokenType::UnaryOperator,    // Address
   r"^(!)[^=]"       => TokenType::UnaryOperator,    // Logical negation
 
-  // Binary Operators
-  r"^\+"            => TokenType::BinaryOperator,   // Addition
-  r"^/"             => TokenType::BinaryOperator,   // Division
-  r"^=="            => TokenType::BinaryOperator,   // Equals
-  r"^>="            => TokenType::BinaryOperator,   // GreaterOrEqual
-  r"^>"             => TokenType::BinaryOperator,   // GreaterThan
-  r"^<="            => TokenType::BinaryOperator,   // LessOrEqual
-  r"^<"             => TokenType::BinaryOperator,   // LessThan
-  r"^\*"            => TokenType::BinaryOperator,   // Multiplication
-  r"^!="            => TokenType::BinaryOperator,   // NotEquals
-  r"^-"             => TokenType::BinaryOperator,   // Substraction
-
   // Delimiters
   r"^\}"            => TokenType::Delimiter,
   r"^\)"            => TokenType::Delimiter,
@@ -65,6 +53,18 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   r"^\["            => TokenType::Delimiter,
   r"^;"             => TokenType::Delimiter,
   r"^->"            => TokenType::Delimiter,
+
+  // Binary Operators
+  r"^\+"            => TokenType::BinaryOperator,   // Addition
+  r"^/"             => TokenType::BinaryOperator,   // Division
+  r"^=="            => TokenType::BinaryOperator,   // Equals
+  r"^>="            => TokenType::BinaryOperator,   // GreaterOrEqual
+  r"^>"             => TokenType::BinaryOperator,   // GreaterThan
+  r"^<="            => TokenType::BinaryOperator,   // LessOrEqual
+  r"^<"             => TokenType::BinaryOperator,   // LessThan
+  r"^\*"            => TokenType::BinaryOperator,   // Multiplication
+  r"^!="            => TokenType::BinaryOperator,   // NotEquals
+  r"^-"             => TokenType::BinaryOperator,   // Substraction
 
   // Identifier - Named value representing some value or other entity
   r"^[a-zA-Z_$][a-zA-Z_$0-9]*"  => TokenType::Identifier,
