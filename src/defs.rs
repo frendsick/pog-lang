@@ -28,6 +28,12 @@ pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
   r"^!="            => TokenType::BinaryOperator,   // NotEquals
   r"^-"             => TokenType::BinaryOperator,   // Substraction
 
+  // Unary Operators
+  r"^\+\+"          => TokenType::UnaryOperator,    // Increment
+  r"^--"            => TokenType::UnaryOperator,    // Decrement
+  r"^&"             => TokenType::UnaryOperator,    // Address
+  r"^(!)[^=]"       => TokenType::UnaryOperator,    // Logical negation
+
   // Delimiters
   r"^\}"            => TokenType::Delimiter,
   r"^\)"            => TokenType::Delimiter,
@@ -48,9 +54,10 @@ pub(crate) struct Token<'a> {
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum TokenType {
+  BinaryOperator,
   Delimiter,
   Literal(DataType),
-  BinaryOperator,
+  UnaryOperator,
   None,
 }
 
