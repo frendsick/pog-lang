@@ -77,3 +77,44 @@ impl<'a> Tokenizer<'a> {
     panic!("Unknown Token at the start of the following code:\n{}", unparsed_code)
   }
 }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+
+  #[test]
+  fn test_lexing_character() {
+    let mut parser: Parser = Parser::init("'c'");
+    let tokens: Vec<Token> = parser.parse();
+    assert_eq!( tokens, vec![
+      Token {
+        typ: &TokenType::Literal(DataType::Character),
+        value: "c",
+      }
+    ]);
+  }
+
+  #[test]
+  fn test_lexing_integer() {
+    let mut parser: Parser = Parser::init("42");
+    let tokens: Vec<Token> = parser.parse();
+    assert_eq!( tokens, vec![
+      Token {
+        typ: &TokenType::Literal(DataType::Integer),
+        value: "42",
+      }
+    ]);
+  }
+
+  #[test]
+  fn test_lexing_string() {
+    let mut parser: Parser = Parser::init("\"This is String\"");
+    let tokens: Vec<Token> = parser.parse();
+    assert_eq!( tokens, vec![
+      Token {
+        typ: &TokenType::Literal(DataType::String),
+        value: "This is String",
+      }
+    ]);
+  }
+}

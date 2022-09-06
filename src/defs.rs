@@ -67,7 +67,7 @@ pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
   r"^[a-zA-Z_$][a-zA-Z_$0-9]*"  => TokenType::Label,
 );
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct Token<'a> {
   pub(crate) typ: &'a TokenType,
   pub(crate) value: &'a str,
