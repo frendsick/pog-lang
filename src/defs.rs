@@ -1,7 +1,7 @@
 #[warn(dead_code)]
-use phf::phf_map;
+use phf::phf_ordered_map;
 
-pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
+pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_map!(
   // Whitespace
   r"^\s+"           => TokenType::None,
 
@@ -30,17 +30,20 @@ pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
   r"^while"         => TokenType::Keyword,
 
   // Assignment Operators
-  r"^(=)[^=]"       => TokenType::AssignmentOperator,
+  r"^(=)[^=]"       => TokenType::AssignmentOperator,   // Simple assignment
+  r"^\+="           => TokenType::AssignmentOperator,   // Addition assignment
+  r"^-="            => TokenType::AssignmentOperator,   // Substraction assignment
+  r"^\*="           => TokenType::AssignmentOperator,   // Multiplication assignment
+  r"^/="            => TokenType::AssignmentOperator,   // Division assignment
 
   // Binary Operators
   r"^\+"            => TokenType::BinaryOperator,   // Addition
-  r"^(/)[^/\*]"     => TokenType::BinaryOperator,   // Division
+  r"^/"             => TokenType::BinaryOperator,   // Division
   r"^=="            => TokenType::BinaryOperator,   // Equals
-  r"^\^"            => TokenType::BinaryOperator,   // Exponentiation
   r"^>="            => TokenType::BinaryOperator,   // GreaterOrEqual
-  r"^(>)[^=]"       => TokenType::BinaryOperator,   // GreaterThan
+  r"^>"             => TokenType::BinaryOperator,   // GreaterThan
   r"^<="            => TokenType::BinaryOperator,   // LessOrEqual
-  r"^(<)[^=]"       => TokenType::BinaryOperator,   // LessThan
+  r"^<"             => TokenType::BinaryOperator,   // LessThan
   r"^\*"            => TokenType::BinaryOperator,   // Multiplication
   r"^!="            => TokenType::BinaryOperator,   // NotEquals
   r"^-"             => TokenType::BinaryOperator,   // Substraction
@@ -49,7 +52,7 @@ pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
   r"^\+\+"          => TokenType::UnaryOperator,    // Increment
   r"^--"            => TokenType::UnaryOperator,    // Decrement
   r"^&"             => TokenType::UnaryOperator,    // Address
-  r"^(!)[^=]"       => TokenType::UnaryOperator,    // Logical negation
+  r"^!"             => TokenType::UnaryOperator,    // Logical negation
 
   // Delimiters
   r"^\}"            => TokenType::Delimiter,
