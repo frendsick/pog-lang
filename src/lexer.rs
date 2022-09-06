@@ -171,14 +171,36 @@ mod tests {
     let operator_count: usize = count_token_types(TokenType::UnaryOperator);
     assert_eq!(operator_count, 4, "Exhaustive testing of UnaryOperators");
 
-    let operators: &str = "++ -- & !";
+    let operators: &str = "++ -- ! &";
     let mut parser: Parser = Parser::init(operators);
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
       Token::new(&TokenType::UnaryOperator, "++"),
       Token::new(&TokenType::UnaryOperator, "--"),
-      Token::new(&TokenType::UnaryOperator, "&"),
       Token::new(&TokenType::UnaryOperator, "!"),
+      Token::new(&TokenType::UnaryOperator, "&"),
+    ]);
+  }
+
+  #[test]
+  fn test_lexing_binary_operators() {
+    let operator_count: usize = count_token_types(TokenType::BinaryOperator);
+    assert_eq!(operator_count, 10, "Exhaustive testing of BinaryOperators");
+
+    let operators: &str = "+ / == >= > <= < * != -";
+    let mut parser: Parser = Parser::init(operators);
+    let tokens: Vec<Token> = parser.parse();
+    assert_eq!( tokens, vec![
+      Token::new(&TokenType::BinaryOperator, "+"),
+      Token::new(&TokenType::BinaryOperator, "/"),
+      Token::new(&TokenType::BinaryOperator, "=="),
+      Token::new(&TokenType::BinaryOperator, ">="),
+      Token::new(&TokenType::BinaryOperator, ">"),
+      Token::new(&TokenType::BinaryOperator, "<="),
+      Token::new(&TokenType::BinaryOperator, "<"),
+      Token::new(&TokenType::BinaryOperator, "*"),
+      Token::new(&TokenType::BinaryOperator, "!="),
+      Token::new(&TokenType::BinaryOperator, "-"),
     ]);
   }
 
