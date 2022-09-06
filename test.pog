@@ -2,10 +2,8 @@
  * This is multi line comment
  */
 
-(34+35) * 14 'c' "This is string" // Single line comment
-
 fun sum(int a, int b) -> int {
-  return a+b
+  return a+b;
 }
 
 fun main() {
