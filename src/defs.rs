@@ -29,6 +29,9 @@ pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
   r"^return"        => TokenType::Keyword,
   r"^while"         => TokenType::Keyword,
 
+  // Assignment Operators
+  r"^(=)[^=]"       => TokenType::AssignmentOperator,
+
   // Binary Operators
   r"^\+"            => TokenType::BinaryOperator,   // Addition
   r"^(/)[^/\*]"     => TokenType::BinaryOperator,   // Division
@@ -58,6 +61,7 @@ pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
   r"^\("            => TokenType::Delimiter,
   r"^\["            => TokenType::Delimiter,
   r"^;"             => TokenType::Delimiter,
+  r"^->"            => TokenType::Delimiter,
 
   // Labels - Named value representing some value or other entity
   r"^[a-zA-Z_$][a-zA-Z_$0-9]*"  => TokenType::Label,
@@ -71,6 +75,7 @@ pub(crate) struct Token<'a> {
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum TokenType {
+  AssignmentOperator,
   BinaryOperator,
   DataType,
   Delimiter,

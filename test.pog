@@ -1,6 +1,9 @@
+/*
+ * This is multi line comment
+ */
+
 (34+35) * 14 'c' "This is string" // Single line comment
 
-/* Mock of the final code
 fun sum(int a, int b) -> int {
   return a+b
 }
@@ -8,6 +11,11 @@ fun sum(int a, int b) -> int {
 fun main() {
   int a = 34;
   int b = 35;
-  print(sum(a,b));
+  int c = print(sum(a,b));
+
+  if c == 69 {
+    print("Nice");
+  } else {
+    print("Not nice");
+  }
 }
-*/
