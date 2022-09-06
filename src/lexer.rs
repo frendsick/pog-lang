@@ -117,4 +117,29 @@ mod tests {
       }
     ]);
   }
+
+  #[test]
+  fn test_lexing_assignment() {
+    let mut parser: Parser = Parser::init("a += 42;");
+    let tokens: Vec<Token> = parser.parse();
+    dbg!(&tokens);
+    assert_eq!( tokens, vec![
+      Token {
+        typ: &TokenType::Label,
+        value: "a",
+      },
+      Token {
+        typ: &TokenType::AssignmentOperator,
+        value: "+=",
+      },
+      Token {
+        typ: &TokenType::Literal(DataType::Integer),
+        value: "42",
+      },
+      Token {
+        typ: &TokenType::Delimiter,
+        value: ";",
+      },
+    ]);
+  }
 }
