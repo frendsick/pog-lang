@@ -12,12 +12,15 @@ impl<'a> Parser<'a> {
       tokenizer: Tokenizer::init(code),
     }
   }
-  pub(crate) fn parse(&mut self) {
+
+  pub(crate) fn parse(&mut self) -> Vec<Token> {
+    let mut tokens: Vec<Token> = vec![];
     loop {
       let token: Option<Token> = self.tokenizer.get_next_token();
       if token.is_none() { break }
-      dbg!(&token);
+      tokens.push(token.unwrap());
     }
+    return tokens;
   }
 }
 
