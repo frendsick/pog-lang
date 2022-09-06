@@ -110,12 +110,34 @@ mod tests {
   fn test_lexing_assignment() {
     let mut parser: Parser = Parser::init("a += 42;");
     let tokens: Vec<Token> = parser.parse();
-    dbg!(&tokens);
     assert_eq!( tokens, vec![
       Token::new(&TokenType::Identifier, "a"),
       Token::new(&TokenType::AssignmentOperator, "+="),
       Token::new(&TokenType::Literal(DataType::Integer), "42"),
       Token::new(&TokenType::Delimiter, ";")
+    ]);
+  }
+
+  #[test]
+  fn test_lexing_if_else() {
+    let mut parser: Parser = Parser::init("if a==b { a++; } else { --a; }");
+    let tokens: Vec<Token> = parser.parse();
+    assert_eq!( tokens, vec![
+      Token::new(&TokenType::Keyword, "if"),
+      Token::new(&TokenType::Identifier, "a"),
+      Token::new(&TokenType::BinaryOperator, "=="),
+      Token::new(&TokenType::Identifier, "b"),
+      Token::new(&TokenType::Delimiter, "{"),
+      Token::new(&TokenType::Identifier, "a"),
+      Token::new(&TokenType::UnaryOperator, "++"),
+      Token::new(&TokenType::Delimiter, ";"),
+      Token::new(&TokenType::Delimiter, "}"),
+      Token::new(&TokenType::Keyword, "else"),
+      Token::new(&TokenType::Delimiter, "{"),
+      Token::new(&TokenType::UnaryOperator, "--"),
+      Token::new(&TokenType::Identifier, "a"),
+      Token::new(&TokenType::Delimiter, ";"),
+      Token::new(&TokenType::Delimiter, "}"),
     ]);
   }
 }
