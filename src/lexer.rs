@@ -58,7 +58,10 @@ impl<'a> Tokenizer<'a> {
         if token_type == &TokenType::None { return self.get_next_token() }
 
         // Go over the starting and ending character for certain Tokens
-        if token_type == &TokenType::Literal(DataType::String) { self.cursor += 2 };
+        if
+          token_type == &TokenType::Literal(DataType::Character) ||
+          token_type == &TokenType::Literal(DataType::String)
+        { self.cursor += 2 };
 
         return Some(Token {
           typ: token_type,

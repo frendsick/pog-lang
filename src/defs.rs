@@ -9,10 +9,9 @@ pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
   r"^//.*"          => TokenType::None, // Single-line comment
   r"^/\*[\s\S]*\*/" => TokenType::None, // Multi-line comment
 
-  // Numbers
+  // Literals
+  r"^'([^'])'"      => TokenType::Literal(DataType::Character),
   r"^\d+"           => TokenType::Literal(DataType::Integer),
-
-  // Strings
   r#"^"([^"]*)""#   => TokenType::Literal(DataType::String),
 
   // Binary Operators
@@ -63,6 +62,7 @@ pub(crate) enum TokenType {
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum DataType {
+  Character,
   Integer,
   String,
 }
