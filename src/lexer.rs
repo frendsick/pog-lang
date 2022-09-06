@@ -80,6 +80,15 @@ mod tests {
   use super::*;
 
   #[test]
+  fn test_lexing_comments() {
+    let mut parser: Parser = Parser::init("/* multi\nline */ 42 // single-line");
+    let tokens: Vec<Token> = parser.parse();
+    assert_eq!( tokens, vec![
+      Token::new(&TokenType::Literal(DataType::Integer), "42"),
+    ]);
+  }
+
+  #[test]
   fn test_lexing_character() {
     let mut parser: Parser = Parser::init("'c'");
     let tokens: Vec<Token> = parser.parse();
