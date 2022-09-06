@@ -116,7 +116,11 @@ mod tests {
 
   #[test]
   fn test_lexing_datatypes() {
-    let mut parser: Parser = Parser::init("char int str");
+    let datatype_count: usize = count_token_types(TokenType::DataType);
+    assert_eq!(datatype_count, 3, "Exhaustive testing of DataTypes");
+
+    let datatypes: &str = "char int str";
+    let mut parser: Parser = Parser::init(datatypes);
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
       Token::new(&TokenType::DataType, "char"),
