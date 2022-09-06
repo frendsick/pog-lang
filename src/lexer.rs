@@ -84,7 +84,7 @@ mod tests {
     let mut parser: Parser = Parser::init("'c'");
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
-      Token::new(&TokenType::Literal(DataType::Character), "c")
+      Token::new(&TokenType::Literal(DataType::Character), "c"),
     ]);
   }
 
@@ -93,7 +93,7 @@ mod tests {
     let mut parser: Parser = Parser::init("42");
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
-      Token::new(&TokenType::Literal(DataType::Integer), "42")
+      Token::new(&TokenType::Literal(DataType::Integer), "42"),
     ]);
   }
 
@@ -102,7 +102,18 @@ mod tests {
     let mut parser: Parser = Parser::init("\"This is String\"");
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
-      Token::new(&TokenType::Literal(DataType::String), "This is String")
+      Token::new(&TokenType::Literal(DataType::String), "This is String"),
+    ]);
+  }
+
+  #[test]
+  fn test_lexing_datatypes() {
+    let mut parser: Parser = Parser::init("char int str");
+    let tokens: Vec<Token> = parser.parse();
+    assert_eq!( tokens, vec![
+      Token::new(&TokenType::DataType, "char"),
+      Token::new(&TokenType::DataType, "int"),
+      Token::new(&TokenType::DataType, "str"),
     ]);
   }
 
@@ -114,7 +125,7 @@ mod tests {
       Token::new(&TokenType::Identifier, "a"),
       Token::new(&TokenType::AssignmentOperator, "+="),
       Token::new(&TokenType::Literal(DataType::Integer), "42"),
-      Token::new(&TokenType::Delimiter, ";")
+      Token::new(&TokenType::Delimiter, ";"),
     ]);
   }
 
