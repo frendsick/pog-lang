@@ -76,6 +76,12 @@ pub(crate) struct Token<'a> {
   pub(crate) value: &'a str,
 }
 
+impl<'a> Token<'a> {
+  pub(crate) fn new(typ: &'a TokenType, value: &'a str) -> Self {
+    Self { typ: typ, value: value }
+  }
+}
+
 #[derive(Debug, PartialEq)]
 pub(crate) enum TokenType {
   AssignmentOperator,

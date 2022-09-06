@@ -7,8 +7,8 @@ pub(crate) struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-  pub(crate) fn init(code: &'a str) -> Parser<'a> {
-    Parser {
+  pub(crate) fn init(code: &'a str) -> Self {
+    Self {
       tokenizer: Tokenizer::init(code),
     }
   }
@@ -31,8 +31,8 @@ struct Tokenizer<'a> {
 }
 
 impl<'a> Tokenizer<'a> {
-  fn init(code: &str) -> Tokenizer {
-    Tokenizer { code: code, cursor: 0 }
+  fn init(code: &'a str) -> Self {
+    Self { code: code, cursor: 0 }
   }
 
   fn has_more_tokens(&self) -> bool {
@@ -66,10 +66,7 @@ impl<'a> Tokenizer<'a> {
           token_type == &TokenType::Literal(DataType::String)
         { self.cursor += 2 };
 
-        return Some(Token {
-          typ: token_type,
-          value: matches.unwrap().as_str()
-        })
+        return Some(Token::new(token_type, matches.unwrap().as_str()))
       }
     }
 
@@ -87,10 +84,7 @@ mod tests {
     let mut parser: Parser = Parser::init("'c'");
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
-      Token {
-        typ: &TokenType::Literal(DataType::Character),
-        value: "c",
-      }
+      Token::new(&TokenType::Literal(DataType::Character), "c")
     ]);
   }
 
@@ -99,10 +93,7 @@ mod tests {
     let mut parser: Parser = Parser::init("42");
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
-      Token {
-        typ: &TokenType::Literal(DataType::Integer),
-        value: "42",
-      }
+      Token::new(&TokenType::Literal(DataType::Integer), "42")
     ]);
   }
 
@@ -111,10 +102,7 @@ mod tests {
     let mut parser: Parser = Parser::init("\"This is String\"");
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
-      Token {
-        typ: &TokenType::Literal(DataType::String),
-        value: "This is String",
-      }
+      Token::new(&TokenType::Literal(DataType::String), "This is String")
     ]);
   }
 
@@ -124,22 +112,10 @@ mod tests {
     let tokens: Vec<Token> = parser.parse();
     dbg!(&tokens);
     assert_eq!( tokens, vec![
-      Token {
-        typ: &TokenType::Label,
-        value: "a",
-      },
-      Token {
-        typ: &TokenType::AssignmentOperator,
-        value: "+=",
-      },
-      Token {
-        typ: &TokenType::Literal(DataType::Integer),
-        value: "42",
-      },
-      Token {
-        typ: &TokenType::Delimiter,
-        value: ";",
-      },
+      Token::new(&TokenType::Label, "a"),
+      Token::new(&TokenType::AssignmentOperator, "+="),
+      Token::new(&TokenType::Literal(DataType::Integer), "42"),
+      Token::new(&TokenType::Delimiter, ";")
     ]);
   }
 }
