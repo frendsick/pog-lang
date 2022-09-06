@@ -15,14 +15,25 @@ pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
   // Strings
   r#"^"([^"]*)""#   => TokenType::Literal(DataType::String),
 
+  // Binary Operators
+  r"^\+"            => TokenType::BinaryOperator,   // Addition
+  r"^(/)[^/\*]"     => TokenType::BinaryOperator,   // Division
+  r"^=="            => TokenType::BinaryOperator,   // Equals
+  r"^\^"            => TokenType::BinaryOperator,   // Exponentiation
+  r"^>="            => TokenType::BinaryOperator,   // GreaterOrEqual
+  r"^(>)[^=]"       => TokenType::BinaryOperator,   // GreaterThan
+  r"^<="            => TokenType::BinaryOperator,   // LessOrEqual
+  r"^(<)[^=]"       => TokenType::BinaryOperator,   // LessThan
+  r"^\*"            => TokenType::BinaryOperator,   // Multiplication
+  r"^!="            => TokenType::BinaryOperator,   // NotEquals
+  r"^-"             => TokenType::BinaryOperator,   // Substraction
+
   // Delimiters
-  r"^>"             => TokenType::Delimiter,
   r"^\}"            => TokenType::Delimiter,
   r"^\)"            => TokenType::Delimiter,
   r"^\]"            => TokenType::Delimiter,
   r"^:"             => TokenType::Delimiter,
   r"^,"             => TokenType::Delimiter,
-  r"^<"             => TokenType::Delimiter,
   r"^\{"            => TokenType::Delimiter,
   r"^\("            => TokenType::Delimiter,
   r"^\["            => TokenType::Delimiter,
@@ -37,8 +48,9 @@ pub(crate) struct Token<'a> {
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum TokenType {
-  Literal(DataType),
   Delimiter,
+  Literal(DataType),
+  BinaryOperator,
   None,
 }
 
