@@ -106,6 +106,14 @@ mod tests {
     ]);
   }
 
+  fn count_token_types(token_type: TokenType) -> usize {
+    let mut keyword_count: usize = 0;
+    for typ in TOKEN_REGEXES.values() {
+      if typ == &token_type { keyword_count+=1 }
+    }
+    return keyword_count;
+  }
+
   #[test]
   fn test_lexing_datatypes() {
     let mut parser: Parser = Parser::init("char int str");
@@ -114,6 +122,26 @@ mod tests {
       Token::new(&TokenType::DataType, "char"),
       Token::new(&TokenType::DataType, "int"),
       Token::new(&TokenType::DataType, "str"),
+    ]);
+  }
+
+  #[test]
+  fn test_lexing_keywords() {
+    let keyword_count: usize = count_token_types(TokenType::Keyword);
+    assert_eq!(keyword_count, 8, "Exhaustive testing of Keywords");
+
+    let keywords: &str = "break continue elif else fun if return while";
+    let mut parser: Parser = Parser::init(keywords);
+    let tokens: Vec<Token> = parser.parse();
+    assert_eq!( tokens, vec![
+      Token::new(&TokenType::Keyword, "break"),
+      Token::new(&TokenType::Keyword, "continue"),
+      Token::new(&TokenType::Keyword, "elif"),
+      Token::new(&TokenType::Keyword, "else"),
+      Token::new(&TokenType::Keyword, "fun"),
+      Token::new(&TokenType::Keyword, "if"),
+      Token::new(&TokenType::Keyword, "return"),
+      Token::new(&TokenType::Keyword, "while"),
     ]);
   }
 
