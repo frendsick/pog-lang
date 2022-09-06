@@ -14,6 +14,16 @@ pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
   r"^\d+"           => TokenType::Literal(DataType::Integer),
   r#"^"([^"]*)""#   => TokenType::Literal(DataType::String),
 
+  // Keywords
+  r"^break"         => TokenType::Keyword,
+  r"^continue"      => TokenType::Keyword,
+  r"^elif"          => TokenType::Keyword,
+  r"^else"          => TokenType::Keyword,
+  r"^fun"           => TokenType::Keyword,
+  r"^if"            => TokenType::Keyword,
+  r"^return"        => TokenType::Keyword,
+  r"^while"         => TokenType::Keyword,
+
   // Binary Operators
   r"^\+"            => TokenType::BinaryOperator,   // Addition
   r"^(/)[^/\*]"     => TokenType::BinaryOperator,   // Division
@@ -56,6 +66,7 @@ pub(crate) enum TokenType {
   BinaryOperator,
   Delimiter,
   Literal(DataType),
+  Keyword,
   UnaryOperator,
   None,
 }
