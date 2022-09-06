@@ -14,6 +14,11 @@ pub(crate) const TOKEN_REGEXES: phf::Map<&str, TokenType> = phf_map!(
   r"^\d+"           => TokenType::Literal(DataType::Integer),
   r#"^"([^"]*)""#   => TokenType::Literal(DataType::String),
 
+  // Datatypes
+  r"^char"          => TokenType::DataType,
+  r"^int"           => TokenType::DataType,
+  r"^str"           => TokenType::DataType,
+
   // Keywords
   r"^break"         => TokenType::Keyword,
   r"^continue"      => TokenType::Keyword,
@@ -64,6 +69,7 @@ pub(crate) struct Token<'a> {
 #[derive(Debug, PartialEq)]
 pub(crate) enum TokenType {
   BinaryOperator,
+  DataType,
   Delimiter,
   Literal(DataType),
   Keyword,
