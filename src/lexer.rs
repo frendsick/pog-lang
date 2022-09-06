@@ -205,6 +205,28 @@ mod tests {
   }
 
   #[test]
+  fn test_lexing_delimiters() {
+    let delimiter_count: usize = count_token_types(TokenType::Delimiter);
+    assert_eq!(delimiter_count, 10, "Exhaustive testing of Delimiters");
+
+    let delimiters: &str = "()[]{}->:,;";
+    let mut parser: Parser = Parser::init(delimiters);
+    let tokens: Vec<Token> = parser.parse();
+    assert_eq!( tokens, vec![
+      Token::new(&TokenType::Delimiter, "("),
+      Token::new(&TokenType::Delimiter, ")"),
+      Token::new(&TokenType::Delimiter, "["),
+      Token::new(&TokenType::Delimiter, "]"),
+      Token::new(&TokenType::Delimiter, "{"),
+      Token::new(&TokenType::Delimiter, "}"),
+      Token::new(&TokenType::Delimiter, "->"),
+      Token::new(&TokenType::Delimiter, ":"),
+      Token::new(&TokenType::Delimiter, ","),
+      Token::new(&TokenType::Delimiter, ";"),
+    ]);
+  }
+
+  #[test]
   fn test_lexing_assignment_statement() {
     let mut parser: Parser = Parser::init("a += 42;");
     let tokens: Vec<Token> = parser.parse();
