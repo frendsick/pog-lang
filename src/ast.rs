@@ -1,4 +1,5 @@
-use crate::defs::{EXPRESSION_DELIMITERS,DataType,Expression,ExpressionType,Program};
+use crate::defs::{BINARY_OPERATORS, EXPRESSION_DELIMITERS};
+use crate::defs::{DataType,Expression,ExpressionType,Program};
 use crate::defs::{Statement,StatementType,Token,TokenType};
 
 pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {

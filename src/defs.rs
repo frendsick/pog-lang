@@ -1,8 +1,7 @@
 #[allow(dead_code)]
 use phf::phf_ordered_map;
 
-pub(crate) const EXPRESSION_DELIMITERS: [&str; 24] = [
-  // Delimiters (Not all of them)
+pub(crate) const EXPRESSION_DELIMITERS: [&str; 7] = [
   ";",
   ")",
   "[",
@@ -10,8 +9,9 @@ pub(crate) const EXPRESSION_DELIMITERS: [&str; 24] = [
   "(",
   ")",
   ",",
+];
 
-  // Binary Operators
+pub(crate) const BINARY_OPERATORS: [&str; 15] = [
   "+",
   "-",
   "*",
@@ -27,10 +27,6 @@ pub(crate) const EXPRESSION_DELIMITERS: [&str; 24] = [
   ">=",
   "<",
   "<=",
-
-  // Unary Operators
-  "++",
-  "--",
 ];
 
 pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_map!(
