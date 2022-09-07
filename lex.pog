@@ -1,0 +1,19 @@
+/*
+ * This is multi line comment
+ */
+
+// Literals
+'c';
+42;
+"This is String";
+
+// Compound Statement
+{
+  ++a;  // Unary Expression
+  {
+    {
+      ; // No Op
+    }
+    return var_name;  // Return Statement
+  }
+}
