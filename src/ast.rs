@@ -68,10 +68,12 @@ mod tests {
   }
 
   #[test]
-  fn test_compound_statement_ast() {
+  fn test_nested_compound_statement_ast() {
     let tokens = vec![
       Token::new(&TokenType::Delimiter, "{"),
+      Token::new(&TokenType::Delimiter, "{"),
       Token::new(&TokenType::Delimiter, ";"),
+      Token::new(&TokenType::Delimiter, "}"),
       Token::new(&TokenType::Delimiter, "}"),
     ];
     let program: Program = generate_ast(&tokens);
@@ -79,8 +81,10 @@ mod tests {
       statements: vec![
         Statement::new(
           StatementType::Compound, None, Some(Box::new(Statement::new(
-            StatementType::NoOperation, None, None,
-          )))
+            StatementType::Compound, None, Some(Box::new(Statement::new(
+              StatementType::NoOperation, None, None,
+            ))),
+          ))),
         ),
       ]
     })
