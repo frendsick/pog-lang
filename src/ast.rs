@@ -38,7 +38,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   }
 
   fn get_no_operation_statement() -> Statement {
-    Statement { typ: StatementType::NoOperation, expression: None, statement: None }
+    Statement::new(StatementType::NoOperation, None, None)
   }
 
   fn get_compound_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
@@ -71,11 +71,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
     // TODO: Verify if the current Token's value is ';'
     *index += 1; // Go past ';' Token
-    return Statement {
-      typ: StatementType::Return,
-      expression: Some(expression),
-      statement: None,
-    }
+    return Statement::new(StatementType::Return, Some(expression), None)
   }
 
   fn get_while_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
@@ -89,12 +85,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     let lookahead: &Token = tokens.get(*index+1)
       .expect("Lookahead failed in get_expression_statement: Program cannot end to an Expression");
     if lookahead.value == ";" { *index += 1; }
-
-    Statement {
-      typ: StatementType::Expression,
-      expression: Some(expression),
-      statement: None,
-    }
+    Statement::new(StatementType::Expression, Some(expression), None)
   }
 
   fn get_next_expression(tokens: &Vec<Token>, index: &mut usize) -> Expression {
