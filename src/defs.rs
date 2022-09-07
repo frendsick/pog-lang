@@ -102,17 +102,24 @@ pub(crate) enum DataType {
   String,
 }
 
-#[derive(Debug)]
-pub(crate) struct Program<'a> {
-  pub(crate) statements: Vec<Statement<'a>>,
+#[derive(Debug, PartialEq)]
+pub(crate) struct Program {
+  pub(crate) statements: Vec<Statement>,
 }
 
-#[derive(Debug)]
-pub(crate) struct Statement<'a> {
-  pub(crate) value: Option<&'a str>,
+#[derive(Debug, PartialEq)]
+pub(crate) struct Statement {
   pub(crate) typ: StatementType,
   pub(crate) expression: Option<Expression>,
-  pub(crate) statement: Option<Box<Statement<'a>>>,
+  pub(crate) statement: Option<Box<Statement>>,
+}
+
+impl Statement {
+  pub(crate) fn new(
+    typ: StatementType, expression: Option<Expression>, statement: Option<Box<Statement>>
+  ) -> Self {
+    Self { typ: typ, expression: expression, statement: statement }
+  }
 }
 
 #[derive(Debug, PartialEq)]
@@ -121,11 +128,12 @@ pub(crate) enum StatementType {
   Conditional,
   Expression,
   Loop,
+  NoOperation,
   Return,
   Variable(DataType),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub(crate) struct Expression {
   pub(crate) value: Option<String>,
   pub(crate) typ: ExpressionType,
