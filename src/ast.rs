@@ -128,7 +128,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
       return get_literal_expression(token);
     }
 
-    // TODO: Parse other binary Expressions than Literals as LHS and RHS
+    // TODO: Parse other binary Expressions than Literals as LHS
     if BINARY_OPERATORS.contains(&lookahead.value) {
       return get_binary_expression(lookahead.value.to_string(), tokens, index)
     }
@@ -147,17 +147,16 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   }
 
   fn get_binary_expression(operator: String, tokens: &Vec<Token>, index: &mut usize) -> Expression {
-    let left: &Token  = tokens.get(*index).unwrap();
-    let right: &Token = tokens.get(*index+2)
-      .expect("RHS is not found for binary expression");
-    *index += 3;  // TODO: Parse other binary Expressions than Literals as LHS and RHS
-
+    // TODO: Parse other LHS Expressions than Literals
+    let left: Expression  = get_literal_expression(tokens.get(*index).unwrap());
+    *index += 2; // Go past binary operator
+    let right: Expression = get_next_expression(tokens, index);
     Expression {
       typ: ExpressionType::Binary,
       value: Some(operator),
       expressions: Some(vec![
-        get_literal_expression(left),
-        get_literal_expression(right),
+        left,
+        right,
       ])
     }
   }
@@ -293,23 +292,33 @@ mod tests {
 
   #[test]
   fn test_binary_expression_statement_ast() {
-    // a > b
-    let binary_operator: &str  = ">";
+    // TODO: Test correct operator precedence
+    // a + b * c
     let tokens: Vec<Token>    = vec![
       Token::new(&TokenType::Identifier, "a"),
-      Token::new(&TokenType::BinaryOperator, binary_operator),
+      Token::new(&TokenType::BinaryOperator, "+"),
       Token::new(&TokenType::Identifier, "b"),
+      Token::new(&TokenType::BinaryOperator, "*"),
+      Token::new(&TokenType::Identifier, "c"),
+      Token::new(&TokenType::Delimiter, ";"),
     ];
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
       statements: vec![
         Statement::new(StatementType::Expression, None, Some(Expression::new(
-          ExpressionType::Binary, Some(binary_operator.to_string()), Some(vec![
+          ExpressionType::Binary, Some("+".to_string()), Some(vec![
             Expression::new(
               ExpressionType::Identifier, Some("a".to_string()), None
             ),
             Expression::new(
-              ExpressionType::Identifier, Some("b".to_string()), None
+              ExpressionType::Binary, Some("*".to_string()), Some(vec![
+                Expression::new(
+                  ExpressionType::Identifier, Some("b".to_string()), None
+                ),
+                Expression::new(
+                  ExpressionType::Identifier, Some("c".to_string()), None
+                ),
+              ])
             ),
           ])
         )), None),
