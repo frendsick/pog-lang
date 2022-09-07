@@ -1,4 +1,4 @@
-use crate::defs::{DataType,Expression,ExpressionType,Program};
+use crate::defs::{EXPRESSION_DELIMITERS,DataType,Expression,ExpressionType,Program};
 use crate::defs::{Statement,StatementType,Token,TokenType};
 
 pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
@@ -29,7 +29,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     // Conditional, Function, Loop or Return
     if token.typ == &TokenType::Keyword {
       if token.value == "fun"     { return get_function_statement(tokens, index) }
-      if token.value == "if"      { return get_if_statement(tokens, index) }
+      if token.value == "if"      { return get_conditional_statement(tokens, index, "if") }
       if token.value == "return"  { return get_return_statement(tokens, index) }
       if token.value == "while"   { return get_while_statement(tokens, index) }
       panic!("Unexpected Keyword at the beginning of Statement: '{}'", token.value)
@@ -40,7 +40,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   }
 
   fn get_no_operation_statement() -> Statement {
-    Statement::new(StatementType::NoOperation, None, None)
+    Statement::new(StatementType::NoOperation, None, None, None)
   }
 
   fn get_compound_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
@@ -59,21 +59,44 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
         .expect("Unclosed Compound Statement"); // TODO: Enhance error reporting
     }
     *index += 1; // Go past the closing curly brace '}'
-    return Statement::new(StatementType::Compound, None, Some(statements));
+    return Statement::new(StatementType::Compound, None, None, Some(statements));
   }
 
   fn get_function_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
     todo!("get_function_statement is not implemented yet")
   }
 
-  fn get_if_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
-    todo!("get_if_statement is not implemented yet")
+  fn get_conditional_statement(tokens: &Vec<Token>, index: &mut usize, condition_type: &str) -> Statement {
+    *index += 1; // Go past 'if' Token
+
+    // Test if the next Token's value is an opening round bracket '('
+    let open_bracket: &Token = tokens.get(*index)
+      .expect("Expected '(' after 'if' but found nothing"); // TODO: Enhance error reporting
+    assert_eq!("(", open_bracket.value, "Expected '(' after 'if' but found '{}'", open_bracket.value);
+    *index += 1;
+
+    // Get Expression between round brackets
+    let expression: Expression = get_next_expression(tokens, index);
+
+    // Test if the next Token's value is a closing round bracket ')'
+    let open_bracket: &Token = tokens.get(*index)
+      .expect("Expected ')' after if's Expression but found nothing"); // TODO: Enhance error reporting
+    assert_eq!(")", open_bracket.value, "Expected ')' after if's Expression but found '{}'", open_bracket.value);
+    *index += 1;
+
+    let statement: Statement = get_next_statement(tokens, index);
+    Statement {
+      typ: StatementType::Conditional,
+      value: Some(condition_type.to_string()),
+      expression: Some(expression),
+      statements: Some(vec![statement]),
+    }
   }
 
   fn get_return_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
     *index += 1; // Go past 'return' Token
     let expression: Expression = get_next_expression(tokens, index);
-    return Statement::new(StatementType::Return, Some(expression), None)
+    return Statement::new(StatementType::Return, None, Some(expression), None)
   }
 
   fn get_while_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
@@ -82,7 +105,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
   fn get_expression_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
     let expression: Expression = get_next_expression(tokens, index);
-    Statement::new(StatementType::Expression, Some(expression), None)
+    Statement::new(StatementType::Expression, None, Some(expression), None)
   }
 
   fn get_next_expression(tokens: &Vec<Token>, index: &mut usize) -> Expression {
@@ -98,21 +121,22 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
       .expect("Lookahead failed in get_next_expression: Program cannot end to an Expression");
 
     // Literal Expressions
-    if lookahead.value == ";" {
+    if EXPRESSION_DELIMITERS.contains(&lookahead.value) {
+      if lookahead.value == ";" { *index += 1; }
       if token.typ == &TokenType::Literal(DataType::Character) {
-        *index += 2;
+        *index += 1;
         return get_character_literal_expression(token.value.to_string())
       }
       if token.typ == &TokenType::Literal(DataType::Integer) {
-        *index += 2;
+        *index += 1;
         return get_integer_literal_expression(token.value.to_string())
       }
       if token.typ == &TokenType::Literal(DataType::String) {
-        *index += 2;
+        *index += 1;
         return get_string_literal_expression(token.value.to_string())
       }
       if token.typ == &TokenType::Identifier {
-        *index += 2;
+        *index += 1;
         return get_identifier_literal_expression(token.value.to_string())
       }
       panic!("Unknown Token for Literal Expression: {:?}", token);
@@ -177,8 +201,8 @@ mod tests {
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
       statements: vec![
-        Statement::new(StatementType::NoOperation, None, None),
-        Statement::new(StatementType::NoOperation, None, None),
+        Statement::new(StatementType::NoOperation, None, None, None),
+        Statement::new(StatementType::NoOperation, None, None, None),
       ]
     })
   }
@@ -194,8 +218,8 @@ mod tests {
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
       statements: vec![
-        Statement::new(StatementType::Return, Some(Expression::new(
-          Some(variable_name.to_string()), ExpressionType::Identifier, None
+        Statement::new(StatementType::Return, None, Some(Expression::new(
+          ExpressionType::Identifier, Some(variable_name.to_string()), None
         )), None),
       ]
     })
@@ -214,9 +238,9 @@ mod tests {
     assert_eq!(program, Program {
       statements: vec![
         Statement::new(
-          StatementType::Compound, None, Some(vec![
-            Statement::new(StatementType::Compound, None, Some(vec![])),
-            Statement::new(StatementType::NoOperation, None, None),
+          StatementType::Compound, None, None, Some(vec![
+            Statement::new(StatementType::Compound, None, None, Some(vec![])),
+            Statement::new(StatementType::NoOperation, None, None, None),
           ])
         ),
       ] // statements
@@ -235,14 +259,60 @@ mod tests {
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
       statements: vec![
-        Statement::new(StatementType::Expression, Some(Expression::new(
-          Some(unary_operator.to_string()), ExpressionType::Unary, Some(vec![
+        Statement::new(StatementType::Expression, None, Some(Expression::new(
+          ExpressionType::Unary, Some(unary_operator.to_string()), Some(vec![
             Expression::new(
-              Some(variable_name.to_string()), ExpressionType::Identifier, None
+              ExpressionType::Identifier, Some(variable_name.to_string()), None
             ),
           ])
         )), None),
       ] // statements
+    })
+  }
+
+  #[test]
+  fn test_if_statement_ast() {
+    let integer_value: &str = "1";
+    let variable_name: &str = "var_name";
+    let tokens: Vec<Token>  = vec![
+      Token::new(&TokenType::Keyword, "if"),
+      Token::new(&TokenType::Delimiter, "("),
+      Token::new(&TokenType::Literal(DataType::Integer), integer_value),
+      Token::new(&TokenType::Delimiter, ")"),
+      Token::new(&TokenType::Delimiter, "{"),
+      Token::new(&TokenType::Keyword, "return"),
+      Token::new(&TokenType::Identifier, variable_name),
+      Token::new(&TokenType::Delimiter, ";"),
+      Token::new(&TokenType::Delimiter, "}"),
+    ];
+    let program: Program = generate_ast(&tokens);
+    assert_eq!(program, Program {
+      statements: vec![
+        Statement {
+          typ: StatementType::Conditional,
+          value: Some("if".to_string()),
+          expression: Some(Expression::new(
+            ExpressionType::Literal(DataType::Integer), Some(integer_value.to_string()), None
+          )),
+          statements: Some(vec![Statement {
+            typ: StatementType::Compound,
+            value: None,
+            expression: None,
+            statements: Some(vec![
+              Statement {
+                typ: StatementType::Return,
+                value: None,
+                expression: Some(Expression {
+                  typ: ExpressionType::Identifier,
+                  value: Some(variable_name.to_string()),
+                  expressions: None,
+                }),
+                statements: None,
+              } // Statement (inner)
+            ]) // Statement.statements (inner)
+          }]), // Statement.statements (outer)
+        } // Statement (outer)
+      ] // Program.statements
     })
   }
 }

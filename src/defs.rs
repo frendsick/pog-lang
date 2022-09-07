@@ -1,6 +1,38 @@
 #[allow(dead_code)]
 use phf::phf_ordered_map;
 
+pub(crate) const EXPRESSION_DELIMITERS: [&str; 24] = [
+  // Delimiters (Not all of them)
+  ";",
+  ")",
+  "[",
+  "]",
+  "(",
+  ")",
+  ",",
+
+  // Binary Operators
+  "+",
+  "-",
+  "*",
+  "/",
+  "=",
+  "+=",
+  "-=",
+  "*=",
+  "/=",
+  "==",
+  "!=",
+  ">",
+  ">=",
+  "<",
+  "<=",
+
+  // Unary Operators
+  "++",
+  "--",
+];
+
 pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_map!(
   // Whitespace
   r"^\s+"           => TokenType::None,
@@ -108,15 +140,19 @@ pub(crate) struct Program {
 #[derive(Debug, PartialEq)]
 pub(crate) struct Statement {
   pub(crate) typ: StatementType,
+  pub(crate) value: Option<String>,
   pub(crate) expression: Option<Expression>,
   pub(crate) statements: Option<Vec<Statement>>,
 }
 
 impl Statement {
   pub(crate) fn new(
-    typ: StatementType, expression: Option<Expression>, statements: Option<Vec<Statement>>
+    typ: StatementType,
+    value: Option<String>,
+    expression: Option<Expression>,
+    statements: Option<Vec<Statement>>
   ) -> Self {
-    Self { typ: typ, expression: expression, statements: statements }
+    Self { typ: typ, value: value, expression: expression, statements: statements }
   }
 }
 
@@ -134,16 +170,16 @@ pub(crate) enum StatementType {
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct Expression {
-  pub(crate) value: Option<String>,
   pub(crate) typ: ExpressionType,
+  pub(crate) value: Option<String>,
   pub(crate) expressions: Option<Vec<Expression>>,
 }
 
 impl Expression {
   pub(crate) fn new(
-    value: Option<String>, typ: ExpressionType, expressions: Option<Vec<Expression>>
+    typ: ExpressionType, value: Option<String>, expressions: Option<Vec<Expression>>
   ) -> Self {
-    Self { value: value, typ: typ, expressions: expressions }
+    Self { typ: typ, value: value, expressions: expressions }
   }
 }
 

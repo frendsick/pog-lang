@@ -7,8 +7,8 @@
 42;
 "This is String";
 
-// Compound Statement
-{
+// Combined Compound and Conditional Statements
+if ( a ) {
   ++a;  // Unary Expression
   {
     {
