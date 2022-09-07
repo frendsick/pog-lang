@@ -1,4 +1,4 @@
-#[warn(dead_code)]
+#[allow(dead_code)]
 use phf::phf_ordered_map;
 
 pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_map!(
@@ -100,4 +100,44 @@ pub(crate) enum DataType {
   Character,
   Integer,
   String,
+}
+
+#[derive(Debug)]
+pub(crate) struct Program<'a> {
+  pub(crate) statements: Vec<Statement<'a>>,
+}
+
+#[derive(Debug)]
+pub(crate) struct Statement<'a> {
+  pub(crate) value: Option<&'a str>,
+  pub(crate) typ: StatementType,
+  pub(crate) expression: Option<Expression>,
+  pub(crate) statement: Option<Box<Statement<'a>>>,
+}
+
+#[derive(Debug, PartialEq)]
+pub(crate) enum StatementType {
+  Compound,
+  Conditional,
+  Expression,
+  Loop,
+  Return,
+  Variable(DataType),
+}
+
+#[derive(Debug)]
+pub(crate) struct Expression {
+  pub(crate) value: Option<String>,
+  pub(crate) typ: ExpressionType,
+  pub(crate) expressions: Box<Vec<Expression>>,
+}
+
+#[derive(Debug, PartialEq)]
+pub(crate) enum ExpressionType {
+  Binary,
+  Literal(DataType),
+  Indexing,
+  FunctionCall,
+  Unary,
+  Enclosure,
 }
