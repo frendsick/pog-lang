@@ -109,14 +109,14 @@ pub(crate) struct Program {
 pub(crate) struct Statement {
   pub(crate) typ: StatementType,
   pub(crate) expression: Option<Expression>,
-  pub(crate) statement: Option<Box<Statement>>,
+  pub(crate) statements: Option<Vec<Statement>>,
 }
 
 impl Statement {
   pub(crate) fn new(
-    typ: StatementType, expression: Option<Expression>, statement: Option<Box<Statement>>
+    typ: StatementType, expression: Option<Expression>, statements: Option<Vec<Statement>>
   ) -> Self {
-    Self { typ: typ, expression: expression, statement: statement }
+    Self { typ: typ, expression: expression, statements: statements }
   }
 }
 

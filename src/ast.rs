@@ -42,6 +42,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   }
 
   fn get_compound_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+    // TODO: Enable parsing nested compound Statements
     *index += 1; // Go past the open curly brace '{'
     if index >= &mut tokens.len() {
       panic!("Program cannot end to open curly brace")
@@ -53,7 +54,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     return Statement {
       typ: StatementType::Compound,
       expression: None,
-      statement: Some(Box::new(statement)),
+      statements: Some(vec![statement]),
     }
   }
 
@@ -201,23 +202,19 @@ mod tests {
   }
 
   #[test]
-  fn test_nested_compound_statement_ast() {
+  fn test_compound_statement_ast() {
     let tokens: Vec<Token> = vec![
       Token::new(&TokenType::Delimiter, "{"),
-      Token::new(&TokenType::Delimiter, "{"),
       Token::new(&TokenType::Delimiter, ";"),
-      Token::new(&TokenType::Delimiter, "}"),
       Token::new(&TokenType::Delimiter, "}"),
     ];
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
       statements: vec![
         Statement::new(
-          StatementType::Compound, None, Some(Box::new(Statement::new(
-            StatementType::Compound, None, Some(Box::new(Statement::new(
-              StatementType::NoOperation, None, None,
-            ))),
-          ))),
+          StatementType::Compound, None, Some(vec![Statement::new(
+            StatementType::NoOperation, None, None,
+          )])
         ),
       ] // statements
     })
