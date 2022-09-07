@@ -8,7 +8,6 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   let mut index: usize = 0;
   while index < tokens.len() {
     statements.push(get_next_statement(&tokens, &mut index));
-    index += 1;
   }
   return Program {
     statements: statements,
@@ -19,7 +18,10 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
     // Compound or NoOperation
     if token.typ == &TokenType::Delimiter {
-      if token.value == ";" { return get_no_operation_statement() }
+      if token.value == ";" {
+        *index += 1; // Go past the semicolon
+        return get_no_operation_statement()
+      }
       if token.value == "{" { return get_compound_statement(tokens, index) }
       panic!("Unexpected Delimiter at the beginning of Statement: '{}'", token.value)
     }
@@ -42,20 +44,22 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   }
 
   fn get_compound_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
-    // TODO: Enable parsing nested compound Statements
     *index += 1; // Go past the open curly brace '{'
     if index >= &mut tokens.len() {
       panic!("Program cannot end to open curly brace")
     }
-    let statement: Statement = get_next_statement(tokens, index);
 
-    // TODO: Verify if the current Token's value is '}'
-    *index += 1; // Go past the closing curly brace '}'
-    return Statement {
-      typ: StatementType::Compound,
-      expression: None,
-      statements: Some(vec![statement]),
+    // Get all Statements inside the Compound Statement
+    let mut statements: Vec<Statement> = vec![];
+    let mut token: &Token = tokens.get(*index)
+      .expect("Unclosed Compound Statement"); // TODO: Enhance error reporting
+    while token.value != "}" {
+      statements.push(get_next_statement(tokens, index));
+      token = tokens.get(*index)
+        .expect("Unclosed Compound Statement"); // TODO: Enhance error reporting
     }
+    *index += 1; // Go past the closing curly brace '}'
+    return Statement::new(StatementType::Compound, None, Some(statements));
   }
 
   fn get_function_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
@@ -69,9 +73,6 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   fn get_return_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
     *index += 1; // Go past 'return' Token
     let expression: Expression = get_next_expression(tokens, index);
-
-    // TODO: Verify if the current Token's value is ';'
-    *index += 1; // Go past ';' Token
     return Statement::new(StatementType::Return, Some(expression), None)
   }
 
@@ -81,11 +82,6 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
   fn get_expression_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
     let expression: Expression = get_next_expression(tokens, index);
-
-    // Go past ';' Token
-    let lookahead: &Token = tokens.get(*index+1)
-      .expect("Lookahead failed in get_expression_statement: Program cannot end to an Expression");
-    if lookahead.value == ";" { *index += 1; }
     Statement::new(StatementType::Expression, Some(expression), None)
   }
 
@@ -104,15 +100,19 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     // Literal Expressions
     if lookahead.value == ";" {
       if token.typ == &TokenType::Literal(DataType::Character) {
+        *index += 2;
         return get_character_literal_expression(token.value.to_string())
       }
       if token.typ == &TokenType::Literal(DataType::Integer) {
+        *index += 2;
         return get_integer_literal_expression(token.value.to_string())
       }
       if token.typ == &TokenType::Literal(DataType::String) {
+        *index += 2;
         return get_string_literal_expression(token.value.to_string())
       }
       if token.typ == &TokenType::Identifier {
+        *index += 2;
         return get_identifier_literal_expression(token.value.to_string())
       }
       panic!("Unknown Token for Literal Expression: {:?}", token);
@@ -202,9 +202,11 @@ mod tests {
   }
 
   #[test]
-  fn test_compound_statement_ast() {
+  fn test_nested_compound_statement_ast() {
     let tokens: Vec<Token> = vec![
       Token::new(&TokenType::Delimiter, "{"),
+      Token::new(&TokenType::Delimiter, "{"),
+      Token::new(&TokenType::Delimiter, "}"),
       Token::new(&TokenType::Delimiter, ";"),
       Token::new(&TokenType::Delimiter, "}"),
     ];
@@ -212,9 +214,10 @@ mod tests {
     assert_eq!(program, Program {
       statements: vec![
         Statement::new(
-          StatementType::Compound, None, Some(vec![Statement::new(
-            StatementType::NoOperation, None, None,
-          )])
+          StatementType::Compound, None, Some(vec![
+            Statement::new(StatementType::Compound, None, Some(vec![])),
+            Statement::new(StatementType::NoOperation, None, None),
+          ])
         ),
       ] // statements
     })
