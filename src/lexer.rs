@@ -159,23 +159,6 @@ mod tests {
   }
 
   #[test]
-  fn test_lexing_assignment_operators() {
-    let operator_count: usize = count_token_types(TokenType::AssignmentOperator);
-    assert_eq!(operator_count, 5, "Exhaustive testing of AssignmentOperators");
-
-    let operators: &str = "= += -= *= /=";
-    let mut parser: Parser = Parser::init(operators);
-    let tokens: Vec<Token> = parser.parse();
-    assert_eq!( tokens, vec![
-      Token::new(&TokenType::AssignmentOperator, "="),
-      Token::new(&TokenType::AssignmentOperator, "+="),
-      Token::new(&TokenType::AssignmentOperator, "-="),
-      Token::new(&TokenType::AssignmentOperator, "*="),
-      Token::new(&TokenType::AssignmentOperator, "/="),
-    ]);
-  }
-
-  #[test]
   fn test_lexing_unary_operators() {
     let operator_count: usize = count_token_types(TokenType::UnaryOperator);
     assert_eq!(operator_count, 4, "Exhaustive testing of UnaryOperators");
@@ -194,9 +177,9 @@ mod tests {
   #[test]
   fn test_lexing_binary_operators() {
     let operator_count: usize = count_token_types(TokenType::BinaryOperator);
-    assert_eq!(operator_count, 10, "Exhaustive testing of BinaryOperators");
+    assert_eq!(operator_count, 15, "Exhaustive testing of BinaryOperators");
 
-    let operators: &str = "+ / == >= > <= < * != -";
+    let operators: &str = "+ / == >= > <= < * != - = += -= *= /=";
     let mut parser: Parser = Parser::init(operators);
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
@@ -210,6 +193,11 @@ mod tests {
       Token::new(&TokenType::BinaryOperator, "*"),
       Token::new(&TokenType::BinaryOperator, "!="),
       Token::new(&TokenType::BinaryOperator, "-"),
+      Token::new(&TokenType::BinaryOperator, "="),
+      Token::new(&TokenType::BinaryOperator, "+="),
+      Token::new(&TokenType::BinaryOperator, "-="),
+      Token::new(&TokenType::BinaryOperator, "*="),
+      Token::new(&TokenType::BinaryOperator, "/="),
     ]);
   }
 
@@ -241,7 +229,7 @@ mod tests {
     let tokens: Vec<Token> = parser.parse();
     assert_eq!( tokens, vec![
       Token::new(&TokenType::Identifier, "a"),
-      Token::new(&TokenType::AssignmentOperator, "+="),
+      Token::new(&TokenType::BinaryOperator, "+="),
       Token::new(&TokenType::Literal(DataType::Integer), "42"),
       Token::new(&TokenType::Delimiter, ";"),
     ]);

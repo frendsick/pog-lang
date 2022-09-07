@@ -29,13 +29,6 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   r"^return"        => TokenType::Keyword,
   r"^while"         => TokenType::Keyword,
 
-  // Assignment Operators
-  r"^(=)[^=]"       => TokenType::AssignmentOperator,   // Simple assignment
-  r"^\+="           => TokenType::AssignmentOperator,   // Addition assignment
-  r"^-="            => TokenType::AssignmentOperator,   // Substraction assignment
-  r"^\*="           => TokenType::AssignmentOperator,   // Multiplication assignment
-  r"^/="            => TokenType::AssignmentOperator,   // Division assignment
-
   // Unary Operators
   r"^\+\+"          => TokenType::UnaryOperator,    // Increment
   r"^--"            => TokenType::UnaryOperator,    // Decrement
@@ -55,9 +48,14 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   r"^->"            => TokenType::Delimiter,
 
   // Binary Operators
+  r"^=="            => TokenType::BinaryOperator,   // Equals
+  r"^="             => TokenType::BinaryOperator,   // Simple assignment
+  r"^\+="           => TokenType::BinaryOperator,   // Addition assignment
+  r"^-="            => TokenType::BinaryOperator,   // Substraction assignment
+  r"^\*="           => TokenType::BinaryOperator,   // Multiplication assignment
+  r"^/="            => TokenType::BinaryOperator,   // Division assignment
   r"^\+"            => TokenType::BinaryOperator,   // Addition
   r"^/"             => TokenType::BinaryOperator,   // Division
-  r"^=="            => TokenType::BinaryOperator,   // Equals
   r"^>="            => TokenType::BinaryOperator,   // GreaterOrEqual
   r"^>"             => TokenType::BinaryOperator,   // GreaterThan
   r"^<="            => TokenType::BinaryOperator,   // LessOrEqual
