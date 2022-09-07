@@ -123,26 +123,16 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
     // Literal Expressions
     if EXPRESSION_DELIMITERS.contains(&lookahead.value) {
+      *index += 1;
       if lookahead.value == ";" { *index += 1; }
-      if token.typ == &TokenType::Literal(DataType::Character) {
-        *index += 1;
-        return get_character_literal_expression(token.value.to_string())
-      }
-      if token.typ == &TokenType::Literal(DataType::Integer) {
-        *index += 1;
-        return get_integer_literal_expression(token.value.to_string())
-      }
-      if token.typ == &TokenType::Literal(DataType::String) {
-        *index += 1;
-        return get_string_literal_expression(token.value.to_string())
-      }
-      if token.typ == &TokenType::Identifier {
-        *index += 1;
-        return get_identifier_literal_expression(token.value.to_string())
-      }
-      panic!("Unknown Token for Literal Expression: {:?}", token);
+      return get_literal_expression(token);
     }
-    todo!("Parsing this kind of Expression is not implemented yet")
+
+    // TODO: Parse other binary Expressions than Literals as LHS and RHS
+    if BINARY_OPERATORS.contains(&lookahead.value) {
+      return get_binary_expression(lookahead.value.to_string(), tokens, index)
+    }
+    todo!("Parsing this kind of Expression is not implemented yet: {:?}", token);
   }
 
   fn get_unary_expression(operator: String, tokens: &Vec<Token>, index: &mut usize) -> Expression {
@@ -154,6 +144,36 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
         vec![get_next_expression(tokens, index)]
       ),
     }
+  }
+
+  fn get_binary_expression(operator: String, tokens: &Vec<Token>, index: &mut usize) -> Expression {
+    let left: &Token  = tokens.get(*index).unwrap();
+    let right: &Token = tokens.get(*index+2)
+      .expect("RHS is not found for binary expression");
+    *index += 3;  // TODO: Parse other binary Expressions than Literals as LHS and RHS
+
+    Expression {
+      typ: ExpressionType::Binary,
+      value: Some(operator),
+      expressions: Some(vec![
+        get_literal_expression(left),
+        get_literal_expression(right),
+      ])
+    }
+  }
+
+  fn get_literal_expression(token: &Token) -> Expression {
+    if token.typ == &TokenType::Literal(DataType::Character) {
+      return get_character_literal_expression(token.value.to_string())
+    }
+    if token.typ == &TokenType::Literal(DataType::Integer) {
+      return get_integer_literal_expression(token.value.to_string())
+    }
+    if token.typ == &TokenType::Literal(DataType::String) {
+      return get_string_literal_expression(token.value.to_string())
+    }
+    // Identifier
+    return get_identifier_literal_expression(token.value.to_string())
   }
 
   fn get_character_literal_expression(token_value: String) -> Expression {
@@ -264,6 +284,32 @@ mod tests {
           ExpressionType::Unary, Some(unary_operator.to_string()), Some(vec![
             Expression::new(
               ExpressionType::Identifier, Some(variable_name.to_string()), None
+            ),
+          ])
+        )), None),
+      ] // statements
+    })
+  }
+
+  #[test]
+  fn test_binary_expression_statement_ast() {
+    // a > b
+    let binary_operator: &str  = ">";
+    let tokens: Vec<Token>    = vec![
+      Token::new(&TokenType::Identifier, "a"),
+      Token::new(&TokenType::BinaryOperator, binary_operator),
+      Token::new(&TokenType::Identifier, "b"),
+    ];
+    let program: Program = generate_ast(&tokens);
+    assert_eq!(program, Program {
+      statements: vec![
+        Statement::new(StatementType::Expression, None, Some(Expression::new(
+          ExpressionType::Binary, Some(binary_operator.to_string()), Some(vec![
+            Expression::new(
+              ExpressionType::Identifier, Some("a".to_string()), None
+            ),
+            Expression::new(
+              ExpressionType::Identifier, Some("b".to_string()), None
             ),
           ])
         )), None),

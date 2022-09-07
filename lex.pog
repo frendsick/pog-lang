@@ -8,7 +8,8 @@
 "This is String";
 
 // Combined Compound and Conditional Statements
-if ( a ) {
+if ( a>b ) // Binary Expression
+{
   ++a;  // Unary Expression
   {
     {
