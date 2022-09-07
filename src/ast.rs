@@ -1,4 +1,5 @@
-use crate::defs::{DataType,Program,Token,TokenType,Statement,StatementType};
+use crate::defs::{DataType,Expression,ExpressionType,Program};
+use crate::defs::{Statement,StatementType,Token,TokenType};
 
 pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   let mut statements: Vec<Statement> = vec![];
@@ -22,16 +23,24 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
       if token.value == "{" { return get_compound_statement(tokens, index) }
       panic!("Unexpected Delimiter at the beginning of Statement: '{}'", token.value)
     }
-    Statement { typ: StatementType::Compound, expression: None, statement: None }
+
+    // Conditional, Function, Loop or Return
+    if token.typ == &TokenType::Keyword {
+      if token.value == "fun"     { return get_function_statement(tokens, index) }
+      if token.value == "if"      { return get_if_statement(tokens, index) }
+      if token.value == "return"  { return get_return_statement(tokens, index) }
+      if token.value == "while"   { return get_while_statement(tokens, index) }
+      panic!("Unexpected Keyword at the beginning of Statement: '{}'", token.value)
+    }
+    panic!("Unknown Statement which starts with '{}'", token.value);
   }
 
   fn get_no_operation_statement() -> Statement {
-    return Statement { typ: StatementType::NoOperation, expression: None, statement: None }
+    Statement { typ: StatementType::NoOperation, expression: None, statement: None }
   }
 
   fn get_compound_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
     *index += 1; // Go past the open curly brace '{'
-    dbg!(*index, tokens.len());
     if index >= &mut tokens.len() {
       panic!("Program cannot end to open curly brace")
     }
@@ -39,22 +48,98 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
     // TODO: Verify if the current Token's value is '}'
     *index += 1; // Go past the closing curly brace '}'
-    return Statement{
+    return Statement {
       typ: StatementType::Compound,
       expression: None,
       statement: Some(Box::new(statement)),
+    }
+  }
+
+  fn get_function_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+    todo!("get_function_statement is not implemented yet")
+  }
+
+  fn get_if_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+    todo!("get_if_statement is not implemented yet")
+  }
+
+  fn get_return_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+    *index += 1; // Go past 'return' Token
+    let expression: Expression = get_next_expression(tokens, index);
+
+    // TODO: Verify if the current Token's value is ';'
+    *index += 1; // Go past ';' Token
+    return Statement {
+      typ: StatementType::Return,
+      expression: Some(expression),
+      statement: None
+    }
+  }
+
+  fn get_while_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+    todo!("get_if_statement is not implemented yet")
+  }
+
+  fn get_next_expression(tokens: &Vec<Token>, index: &mut usize) -> Expression {
+    // TODO: Support other Expressions than Literals
+    let token: &Token = tokens.get(*index).expect("There is no Tokens left for Expression");
+
+    // Literal Expressions
+    if token.typ == &TokenType::Literal(DataType::Character) {
+      return get_character_literal_expression(token.value.to_string())
+    }
+    if token.typ == &TokenType::Literal(DataType::Integer) {
+      return get_integer_literal_expression(token.value.to_string())
+    }
+    if token.typ == &TokenType::Literal(DataType::String) {
+      return get_string_literal_expression(token.value.to_string())
+    }
+    if token.typ == &TokenType::Identifier {
+      return get_identifier_literal_expression(token.value.to_string())
+    }
+    todo!("Only Literal Expressions are implemented")
+  }
+
+  fn get_character_literal_expression(token_value: String) -> Expression {
+    Expression {
+      value: Some(token_value),
+      typ: ExpressionType::Literal(DataType::Character),
+      expressions: None
+    }
+  }
+
+  fn get_integer_literal_expression(token_value: String) -> Expression {
+    Expression {
+      value: Some(token_value),
+      typ: ExpressionType::Literal(DataType::Integer),
+      expressions: None
+    }
+  }
+
+  fn get_string_literal_expression(token_value: String) -> Expression {
+    Expression {
+      value: Some(token_value),
+      typ: ExpressionType::Literal(DataType::String),
+      expressions: None
+    }
+  }
+
+  fn get_identifier_literal_expression(token_value: String) -> Expression {
+    Expression {
+      value: Some(token_value),
+      typ: ExpressionType::Identifier,
+      expressions: None
     }
   }
 }
 
 #[cfg(test)]
 mod tests {
-  use crate::defs::{StatementType};
   use super::*;
 
   #[test]
   fn test_no_operation_statement_ast() {
-    let tokens = vec![
+    let tokens: Vec<Token> = vec![
       Token::new(&TokenType::Delimiter, ";"),
       Token::new(&TokenType::Delimiter, ";"),
     ];
@@ -68,8 +153,26 @@ mod tests {
   }
 
   #[test]
+  fn test_return_statement_ast() {
+    let variable_name: &str = "var_name";
+    let tokens: Vec<Token> = vec![
+      Token::new(&TokenType::Keyword, "return"),
+      Token::new(&TokenType::Identifier, variable_name),
+      Token::new(&TokenType::Delimiter, ";"),
+    ];
+    let program: Program = generate_ast(&tokens);
+    assert_eq!(program, Program {
+      statements: vec![
+        Statement::new(StatementType::Return, Some(Expression::new(
+          Some(variable_name.to_string()), ExpressionType::Identifier, None
+        )), None),
+      ]
+    })
+  }
+
+  #[test]
   fn test_nested_compound_statement_ast() {
-    let tokens = vec![
+    let tokens: Vec<Token> = vec![
       Token::new(&TokenType::Delimiter, "{"),
       Token::new(&TokenType::Delimiter, "{"),
       Token::new(&TokenType::Delimiter, ";"),
