@@ -83,9 +83,16 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   }
 
   fn get_expression_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+    let expression: Expression = get_next_expression(tokens, index);
+
+    // Go past ';' Token
+    let lookahead: &Token = tokens.get(*index+1)
+      .expect("Lookahead failed in get_expression_statement: Program cannot end to an Expression");
+    if lookahead.value == ";" { *index += 1; }
+
     Statement {
       typ: StatementType::Expression,
-      expression: Some(get_next_expression(tokens, index)),
+      expression: Some(expression),
       statement: None,
     }
   }
@@ -100,11 +107,10 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
       return get_unary_expression(token.value.to_string(), tokens, index)
     }
     let lookahead: &Token = tokens.get(*index+1)
-      .expect("Lookahead failed: Program cannot end to an Expression");
+      .expect("Lookahead failed in get_next_expression: Program cannot end to an Expression");
 
     // Literal Expressions
     if lookahead.value == ";" {
-      *index += 1;
       if token.typ == &TokenType::Literal(DataType::Character) {
         return get_character_literal_expression(token.value.to_string())
       }
