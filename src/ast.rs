@@ -32,7 +32,9 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
       if token.value == "while"   { return get_while_statement(tokens, index) }
       panic!("Unexpected Keyword at the beginning of Statement: '{}'", token.value)
     }
-    panic!("Unknown Statement which starts with '{}'", token.value);
+
+    // Expression
+    return get_expression_statement(tokens, index);
   }
 
   fn get_no_operation_statement() -> Statement {
@@ -72,7 +74,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     return Statement {
       typ: StatementType::Return,
       expression: Some(expression),
-      statement: None
+      statement: None,
     }
   }
 
@@ -80,24 +82,55 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     todo!("get_if_statement is not implemented yet")
   }
 
+  fn get_expression_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+    Statement {
+      typ: StatementType::Expression,
+      expression: Some(get_next_expression(tokens, index)),
+      statement: None,
+    }
+  }
+
   fn get_next_expression(tokens: &Vec<Token>, index: &mut usize) -> Expression {
-    // TODO: Support other Expressions than Literals
-    let token: &Token = tokens.get(*index).expect("There is no Tokens left for Expression");
+    let token: &Token = tokens.get(*index)
+      .expect("There are no Tokens left for Expression");
+
+    // Unary Expressions
+    // TODO: Parse post-increment and post-decrement expressions
+    if token.typ == &TokenType::UnaryOperator {
+      return get_unary_expression(token.value.to_string(), tokens, index)
+    }
+    let lookahead: &Token = tokens.get(*index+1)
+      .expect("Lookahead failed: Program cannot end to an Expression");
 
     // Literal Expressions
-    if token.typ == &TokenType::Literal(DataType::Character) {
-      return get_character_literal_expression(token.value.to_string())
+    if lookahead.value == ";" {
+      *index += 1;
+      if token.typ == &TokenType::Literal(DataType::Character) {
+        return get_character_literal_expression(token.value.to_string())
+      }
+      if token.typ == &TokenType::Literal(DataType::Integer) {
+        return get_integer_literal_expression(token.value.to_string())
+      }
+      if token.typ == &TokenType::Literal(DataType::String) {
+        return get_string_literal_expression(token.value.to_string())
+      }
+      if token.typ == &TokenType::Identifier {
+        return get_identifier_literal_expression(token.value.to_string())
+      }
+      panic!("Unknown Token for Literal Expression: {:?}", token);
     }
-    if token.typ == &TokenType::Literal(DataType::Integer) {
-      return get_integer_literal_expression(token.value.to_string())
+    todo!("Parsing this kind of Expression is not implemented yet")
+  }
+
+  fn get_unary_expression(operator: String, tokens: &Vec<Token>, index: &mut usize) -> Expression {
+    *index += 1; // Go past unary operator
+    Expression {
+      value: Some(operator),
+      typ: ExpressionType::Unary,
+      expressions: Some(
+        vec![get_next_expression(tokens, index)]
+      ),
     }
-    if token.typ == &TokenType::Literal(DataType::String) {
-      return get_string_literal_expression(token.value.to_string())
-    }
-    if token.typ == &TokenType::Identifier {
-      return get_identifier_literal_expression(token.value.to_string())
-    }
-    todo!("Only Literal Expressions are implemented")
   }
 
   fn get_character_literal_expression(token_value: String) -> Expression {
