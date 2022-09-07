@@ -222,7 +222,30 @@ mod tests {
             ))),
           ))),
         ),
-      ]
+      ] // statements
+    })
+  }
+
+  #[test]
+  fn test_unary_expression_statement_ast() {
+    let unary_operator: &str  = "++";
+    let variable_name: &str   = "var_name";
+    let tokens: Vec<Token>    = vec![
+      Token::new(&TokenType::UnaryOperator, unary_operator),
+      Token::new(&TokenType::Identifier, variable_name),
+      Token::new(&TokenType::Delimiter, ";"),
+    ];
+    let program: Program = generate_ast(&tokens);
+    assert_eq!(program, Program {
+      statements: vec![
+        Statement::new(StatementType::Expression, Some(Expression::new(
+          Some(unary_operator.to_string()), ExpressionType::Unary, Some(vec![
+            Expression::new(
+              Some(variable_name.to_string()), ExpressionType::Identifier, None
+            ),
+          ])
+        )), None),
+      ] // statements
     })
   }
 }

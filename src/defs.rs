@@ -135,15 +135,24 @@ pub(crate) enum StatementType {
 pub(crate) struct Expression {
   pub(crate) value: Option<String>,
   pub(crate) typ: ExpressionType,
-  pub(crate) expressions: Box<Vec<Expression>>,
+  pub(crate) expressions: Option<Vec<Expression>>,
+}
+
+impl Expression {
+  pub(crate) fn new(
+    value: Option<String>, typ: ExpressionType, expressions: Option<Vec<Expression>>
+  ) -> Self {
+    Self { value: value, typ: typ, expressions: expressions }
+  }
 }
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum ExpressionType {
   Binary,
-  Literal(DataType),
-  Indexing,
-  FunctionCall,
-  Unary,
   Enclosure,
+  FunctionCall,
+  Identifier,
+  Indexing,
+  Literal(DataType),
+  Unary,
 }
