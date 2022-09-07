@@ -125,6 +125,7 @@ pub(crate) enum StatementType {
   Compound,
   Conditional,
   Expression,
+  Function,
   Loop,
   NoOperation,
   Return,
