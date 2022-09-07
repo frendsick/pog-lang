@@ -49,24 +49,19 @@ impl<'a> Tokenizer<'a> {
       if !captures.is_none() {
 
         // Take match from capture group if it is explicitly specified
-        let mut matches: Option<Match> = captures.as_ref().unwrap().get(1);
-        if matches.is_none() {
-          matches = captures.unwrap().get(0);
+        let whole_match: Option<Match> = captures.as_ref().unwrap().get(0);
+        let mut token_match: Option<Match> = captures.unwrap().get(1);
+        if token_match.is_none() {
+          token_match = whole_match;
         }
 
         // Move cursor to the end of the parsed Token
-        self.cursor += matches.unwrap().end();
+        self.cursor += whole_match.unwrap().end();
 
         // Token should be skipped, e.g. whitespace or comment
         if token_type == &TokenType::None { return self.get_next_token() }
 
-        // Go over the starting and ending character for certain Tokens
-        if
-          token_type == &TokenType::Literal(DataType::Character) ||
-          token_type == &TokenType::Literal(DataType::String)
-        { self.cursor += 2 };
-
-        return Some(Token::new(token_type, matches.unwrap().as_str()))
+        return Some(Token::new(token_type, token_match.unwrap().as_str()))
       }
     }
 
