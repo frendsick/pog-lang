@@ -126,8 +126,8 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     Statement {
       typ: StatementType::Variable(datatype),
       value: Some(variable_name),
-      expression: None,
-      statements: Some(vec![get_next_statement(tokens, index)]),
+      expression: Some(get_next_expression(tokens, index)),
+      statements: None
     }
   }
 
