@@ -136,7 +136,7 @@ pub(crate) enum DataType {
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct Variable {
+pub(crate) struct Parameter {
   pub(crate) name: String,
   pub(crate) typ: DataType,
 }
@@ -181,7 +181,7 @@ pub(crate) enum StatementType {
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct StatementOptions {
-  pub(crate) parameters: Vec<Variable>,
+  pub(crate) parameters: Vec<Parameter>,
   pub(crate) return_type: DataType,
 }
 

@@ -1,6 +1,6 @@
 use crate::defs::{BINARY_OPERATORS,DATATYPES,EXPRESSION_DELIMITERS};
 use crate::defs::{DataType,Expression,ExpressionType,Program};
-use crate::defs::{Statement,StatementOptions,StatementType,Token,TokenType,Variable};
+use crate::defs::{Statement,StatementOptions,Parameter,StatementType,Token,TokenType};
 use crate::utils::get_datatype_from_str;
 
 pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
@@ -100,8 +100,8 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     *index += 3; // Go past the round bracket '('
 
     // Gather function parameters
-    let parameters: Vec<Variable> = get_function_parameters(&function_name, tokens, index);
-    let return_type: DataType     = get_function_return_type(&function_name, tokens, index);
+    let parameters: Vec<Parameter>  = get_function_parameters(&function_name, tokens, index);
+    let return_type: DataType       = get_function_return_type(&function_name, tokens, index);
     return Statement {
       typ: StatementType::Function,
       value: Some(function_name),
@@ -114,9 +114,9 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     }
   }
 
-  fn get_function_parameters(function_name: &String, tokens: &Vec<Token>, index: &mut usize) -> Vec<Variable> {
+  fn get_function_parameters(function_name: &String, tokens: &Vec<Token>, index: &mut usize) -> Vec<Parameter> {
     // TODO: Parse real function parameters
-    let mut parameters: Vec<Variable> = vec![];
+    let mut parameters: Vec<Parameter> = vec![];
     while *index < tokens.len() {
       let token: &Token = tokens.get(*index).unwrap();
       *index += 1;
