@@ -30,7 +30,8 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     // Conditional, Function, Loop or Return
     if token.typ == &TokenType::Keyword {
       if token.value == "fun"     { return get_function_statement(tokens, index) }
-      if token.value == "if"      { return get_conditional_statement(tokens, index, "if") }
+      if token.value == "if"      { return get_block_statement(tokens, index, "if") }
+      if token.value == "while"   { return get_block_statement(tokens, index, "while") }
       if token.value == "return"  { return get_return_statement(tokens, index) }
       if token.value == "while"   { return get_while_statement(tokens, index) }
       panic!("Unexpected Keyword at the beginning of Statement: '{}'", token.value)
@@ -67,7 +68,8 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     todo!("get_function_statement is not implemented yet")
   }
 
-  fn get_conditional_statement(tokens: &Vec<Token>, index: &mut usize, condition_type: &str) -> Statement {
+  /// Block statements consist of a Keyword, a condition in round brackets and a Compound Statement
+  fn get_block_statement(tokens: &Vec<Token>, index: &mut usize, block_type: &str) -> Statement {
     *index += 1; // Go past 'if' Token
 
     // Test if the next Token's value is an opening round bracket '('
@@ -85,10 +87,10 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     assert_eq!(")", open_bracket.value, "Expected ')' after if's Expression but found '{}'", open_bracket.value);
     *index += 1;
 
-    let statement: Statement = get_next_statement(tokens, index);
+    let statement: Statement = get_compound_statement(tokens, index);
     Statement {
       typ: StatementType::Conditional,
-      value: Some(condition_type.to_string()),
+      value: Some(block_type.to_string()),
       expression: Some(expression),
       statements: Some(vec![statement]),
     }
@@ -327,13 +329,14 @@ mod tests {
   }
 
   #[test]
-  fn test_if_statement_ast() {
-    let integer_value: &str = "1";
+  fn test_conditional_statement_ast() {
+    // if(var_name) { return var_name; }
+    let keyword: &str       = "if";
     let variable_name: &str = "var_name";
     let tokens: Vec<Token>  = vec![
-      Token::new(&TokenType::Keyword, "if"),
+      Token::new(&TokenType::Keyword, keyword),
       Token::new(&TokenType::Delimiter, "("),
-      Token::new(&TokenType::Literal(DataType::Integer), integer_value),
+      Token::new(&TokenType::Identifier, variable_name),
       Token::new(&TokenType::Delimiter, ")"),
       Token::new(&TokenType::Delimiter, "{"),
       Token::new(&TokenType::Keyword, "return"),
@@ -346,9 +349,9 @@ mod tests {
       statements: vec![
         Statement {
           typ: StatementType::Conditional,
-          value: Some("if".to_string()),
+          value: Some(keyword.to_string()),
           expression: Some(Expression::new(
-            ExpressionType::Literal(DataType::Integer), Some(integer_value.to_string()), None
+            ExpressionType::Identifier, Some(variable_name.to_string()), None
           )),
           statements: Some(vec![Statement {
             typ: StatementType::Compound,
@@ -362,6 +365,58 @@ mod tests {
                   typ: ExpressionType::Identifier,
                   value: Some(variable_name.to_string()),
                   expressions: None,
+                }),
+                statements: None,
+              } // Statement (inner)
+            ]) // Statement.statements (inner)
+          }]), // Statement.statements (outer)
+        } // Statement (outer)
+      ] // Program.statements
+    })
+  }
+
+  #[test]
+  fn test_loop_statement_ast() {
+    // while(var_name) { --var_name; }
+    let keyword: &str         = "while";
+    let unary_operator: &str  = "--";
+    let variable_name: &str   = "var_name";
+    let tokens: Vec<Token>    = vec![
+      Token::new(&TokenType::Keyword, keyword),
+      Token::new(&TokenType::Delimiter, "("),
+      Token::new(&TokenType::Identifier, variable_name),
+      Token::new(&TokenType::Delimiter, ")"),
+      Token::new(&TokenType::Delimiter, "{"),
+      Token::new(&TokenType::UnaryOperator, unary_operator),
+      Token::new(&TokenType::Identifier, variable_name),
+      Token::new(&TokenType::Delimiter, ";"),
+      Token::new(&TokenType::Delimiter, "}"),
+    ];
+    let program: Program = generate_ast(&tokens);
+    assert_eq!(program, Program {
+      statements: vec![
+        Statement {
+          typ: StatementType::Conditional,
+          value: Some(keyword.to_string()),
+          expression: Some(Expression::new(
+            ExpressionType::Identifier, Some(variable_name.to_string()), None
+          )),
+          statements: Some(vec![Statement {
+            typ: StatementType::Compound,
+            value: None,
+            expression: None,
+            statements: Some(vec![
+              Statement {
+                typ: StatementType::Expression,
+                value: None,
+                expression: Some(Expression {
+                  typ: ExpressionType::Unary,
+                  value: Some(unary_operator.to_string()),
+                  expressions: Some(vec![Expression{
+                    typ: ExpressionType::Identifier,
+                    value: Some(variable_name.to_string()),
+                    expressions: None,
+                  }]),
                 }),
                 statements: None,
               } // Statement (inner)
