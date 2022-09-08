@@ -354,6 +354,40 @@ mod tests {
   }
 
   #[test]
+  fn test_variable_assignment_statement_ast() {
+    let variable_name: &str = "var_name";
+    let tokens: Vec<Token> = vec![
+      Token::new(&TokenType::DataType, "int"),
+      Token::new(&TokenType::Identifier, variable_name),
+      Token::new(&TokenType::BinaryOperator, "="),
+      Token::new(&TokenType::Identifier, "a"),
+      Token::new(&TokenType::BinaryOperator, "*"),
+      Token::new(&TokenType::Identifier, "b"),
+      Token::new(&TokenType::Delimiter, ";"),
+    ];
+    let program: Program = generate_ast(&tokens);
+    assert_eq!(program, Program {
+      statements: vec![
+        Statement {
+          typ: StatementType::Variable(DataType::Integer),
+          value: Some(variable_name.to_string()),
+          expression: Some(Expression::new(
+            ExpressionType::Binary, Some("*".to_string()), Some(vec![
+              Expression::new(
+                ExpressionType::Identifier, Some("a".to_string()), None
+              ),
+              Expression::new(
+                ExpressionType::Identifier, Some("b".to_string()), None
+              ),
+            ]
+          ))), // expression
+          statements: None
+        },
+      ] // statements
+    })
+  }
+
+  #[test]
   fn test_conditional_statement_ast() {
     // if(var_name) { return var_name; }
     let keyword: &str       = "if";
