@@ -2,13 +2,14 @@
  * This is multi line comment
  */
 
-// Literals
-'c';
-42;
-"This is String";
+// Variable Assignments
+char var1 = 'c';              // Literal(Character)
+int  var2 = 42;               // Literal(Integer)
+str  var3 = "This is String"; // Literal(String)
+int  var4 = 34+35 * 4 / 2-15; // Nested Binary Statement
 
 // Combined Compound and Conditional Statements
-if ( a>b * 4+2) // Binary Expression
+if ( var4>var2 )
 {
   ++a;  // Unary Expression
   while ( condition ) { // While loop

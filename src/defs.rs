@@ -1,6 +1,12 @@
 #[allow(dead_code)]
 use phf::phf_ordered_map;
 
+pub(crate) const DATATYPES: [&str; 3] = [
+  "char",
+  "int",
+  "str",
+];
+
 pub(crate) const EXPRESSION_DELIMITERS: [&str; 7] = [
   ";",
   ")",

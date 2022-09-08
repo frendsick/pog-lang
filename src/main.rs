@@ -1,6 +1,7 @@
 mod ast;
 mod defs;
 mod lexer;
+mod utils;
 
 use std::fs;
 use ast::generate_ast;

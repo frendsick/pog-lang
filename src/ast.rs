@@ -1,6 +1,7 @@
-use crate::defs::{BINARY_OPERATORS, EXPRESSION_DELIMITERS};
+use crate::defs::{BINARY_OPERATORS,DATATYPES,EXPRESSION_DELIMITERS};
 use crate::defs::{DataType,Expression,ExpressionType,Program};
 use crate::defs::{Statement,StatementType,Token,TokenType};
+use crate::utils::get_datatype_from_str;
 
 pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   let mut statements: Vec<Statement> = vec![];
@@ -31,10 +32,15 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     if token.typ == &TokenType::Keyword {
       if token.value == "fun"     { return get_function_statement(tokens, index) }
       if token.value == "if"      { return get_block_statement(tokens, index, "if") }
-      if token.value == "while"   { return get_block_statement(tokens, index, "while") }
       if token.value == "return"  { return get_return_statement(tokens, index) }
-      if token.value == "while"   { return get_while_statement(tokens, index) }
+      if token.value == "while"   { return get_block_statement(tokens, index, "while") }
       panic!("Unexpected Keyword at the beginning of Statement: '{}'", token.value)
+    }
+
+    // Variable Definition
+    if DATATYPES.contains(&token.value) {
+      let variable_datatype: DataType = get_datatype_from_str(token.value);
+      return get_variable_definition_statement(tokens, index, variable_datatype);
     }
 
     // Expression
@@ -102,8 +108,27 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     return Statement::new(StatementType::Return, None, Some(expression), None)
   }
 
-  fn get_while_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
-    todo!("get_if_statement is not implemented yet")
+  fn get_variable_definition_statement(tokens: &Vec<Token>, index: &mut usize, datatype: DataType) -> Statement {
+    // Get variable name from after the DataType Token ('char', 'int', 'str', ...)
+    let variable_name: String = tokens.get(*index+1)
+      .expect("Could not get Identifier for variable definition").value.to_string();
+
+    // Verify if the next Token is '='
+    // Note: Other assignment operators like '+=' and '*=' do not make sense when declaring variable
+    let assignment_token_value: &str = tokens.get(*index+2)
+      .expect("Expected '=' in variable definition but got nothing").value;
+    if assignment_token_value != "=" {
+      panic!("Expected '=' in variable definition but got '{}'", assignment_token_value)
+    }
+
+    // Go past the DataType, variable name Identifier and assignment Tokens
+    *index += 3;
+    Statement {
+      typ: StatementType::Variable(datatype),
+      value: Some(variable_name),
+      expression: None,
+      statements: Some(vec![get_next_statement(tokens, index)]),
+    }
   }
 
   fn get_expression_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
