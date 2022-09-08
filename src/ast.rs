@@ -199,29 +199,42 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   }
 
   fn get_next_expression(tokens: &Vec<Token>, index: &mut usize) -> Expression {
-    let token: &Token = tokens.get(*index)
+    let first_token: &Token = tokens.get(*index)
       .expect("There are no Tokens left for Expression");
 
     // Unary Expressions
     // TODO: Parse post-increment and post-decrement expressions
-    if token.typ == &TokenType::UnaryOperator {
-      return get_unary_expression(token.value.to_string(), tokens, index)
+    if first_token.typ == &TokenType::UnaryOperator {
+      return get_unary_expression(first_token.value.to_string(), tokens, index)
     }
-    let lookahead: &Token = tokens.get(*index+1)
-      .expect("Lookahead failed in get_next_expression: Program cannot end to an Expression");
+    let lookahead_value: &str = tokens.get(*index+1)
+      .expect("Lookahead failed in get_next_expression: Program cannot end to an Expression").value;
 
     // Literal Expressions
-    if EXPRESSION_DELIMITERS.contains(&lookahead.value) {
+    if EXPRESSION_DELIMITERS.contains(&lookahead_value) {
       *index += 1;
-      if lookahead.value == ";" { *index += 1; }
-      return get_literal_expression(token);
+      if lookahead_value == "(" {
+        return get_function_call_expression(first_token.value.to_string(), tokens, index);
+      }
+      if lookahead_value == ";" { *index += 1; }
+      return get_literal_expression(first_token);
     }
 
-    // TODO: Parse other binary Expressions than Literals as LHS
-    if BINARY_OPERATORS.contains(&lookahead.value) {
-      return get_binary_expression(lookahead.value.to_string(), tokens, index)
+    // Define the type of Expression from the next Expression delimiter
+    let mut temp_index: usize = *index;
+    while temp_index < tokens.len() {
+      temp_index += 1;
+      let token_value: &str = tokens.get(temp_index)
+        .expect("Could not parse current Expression's type").value;
+
+      // TODO: Parse other binary Expressions than Literals as LHS
+      if BINARY_OPERATORS.contains(&token_value) {
+        return get_binary_expression(token_value.to_string(), tokens, index)
+      }
+
+      todo!("Parsing this kind of Expression is not implemented yet: {:?}", token_value);
     }
-    todo!("Parsing this kind of Expression is not implemented yet: {:?}", token);
+    todo!("Parsing this kind of Expression is not implemented yet: {:?}", first_token);
   }
 
   fn get_unary_expression(operator: String, tokens: &Vec<Token>, index: &mut usize) -> Expression {
@@ -262,6 +275,35 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     }
     // Identifier
     return get_identifier_literal_expression(token.value.to_string())
+  }
+
+  fn get_function_call_expression(function_name: String, tokens: &Vec<Token>, index: &mut usize) -> Expression {
+    *index += 1; // Go past opening round bracket of function call
+    let mut token_value: &str = tokens.get(*index)
+      .expect("Expected function parameter but got nothing").value;
+
+    // Parse all parameter Expressions for the function
+    let mut parameter_expressions: Vec<Expression> = vec![];
+    while *index < tokens.len() && token_value != ")" {
+      parameter_expressions.push(get_next_expression(tokens, index));
+
+      // Verify if the current Token is ',' or ')'
+      token_value = tokens.get(*index)
+      .expect("Expected function parameter but got nothing").value;
+      *index += 1;
+    }
+
+    // Verify that the last token of the expression is ';'
+    token_value = tokens.get(*index)
+      .expect("Expected ';' but got nothing").value;
+    if token_value != ";" { panic!("Expected ';' but got '{}'", token_value) }
+    *index += 1;
+
+    Expression {
+      typ: ExpressionType::FunctionCall,
+      value: Some(function_name),
+      expressions: Some(parameter_expressions),
+    }
   }
 
   fn get_character_literal_expression(token_value: String) -> Expression {
