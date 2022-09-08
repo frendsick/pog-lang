@@ -102,7 +102,7 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   r"^[a-zA-Z_$][a-zA-Z_$0-9]*"  => TokenType::Identifier,
 );
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct Token<'a> {
   pub(crate) typ: &'a TokenType,
   pub(crate) value: &'a str,
@@ -131,7 +131,14 @@ pub(crate) enum TokenType {
 pub(crate) enum DataType {
   Character,
   Integer,
+  None,
   String,
+}
+
+#[derive(Debug, PartialEq)]
+pub(crate) struct Variable {
+  pub(crate) name: String,
+  pub(crate) typ: DataType,
 }
 
 #[derive(Debug, PartialEq)]
@@ -143,6 +150,7 @@ pub(crate) struct Program {
 pub(crate) struct Statement {
   pub(crate) typ: StatementType,
   pub(crate) value: Option<String>,
+  pub(crate) options: Option<StatementOptions>,
   pub(crate) expression: Option<Expression>,
   pub(crate) statements: Option<Vec<Statement>>,
 }
@@ -151,10 +159,11 @@ impl Statement {
   pub(crate) fn new(
     typ: StatementType,
     value: Option<String>,
+    options: Option<StatementOptions>,
     expression: Option<Expression>,
     statements: Option<Vec<Statement>>
   ) -> Self {
-    Self { typ: typ, value: value, expression: expression, statements: statements }
+    Self { typ: typ, value: value, options: options, expression: expression, statements: statements }
   }
 }
 
@@ -168,6 +177,12 @@ pub(crate) enum StatementType {
   NoOperation,
   Return,
   Variable(DataType),
+}
+
+#[derive(Debug, PartialEq)]
+pub(crate) struct StatementOptions {
+  pub(crate) parameters: Vec<Variable>,
+  pub(crate) return_type: DataType,
 }
 
 #[derive(Debug, PartialEq)]

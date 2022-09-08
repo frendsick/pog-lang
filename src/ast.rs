@@ -1,6 +1,6 @@
 use crate::defs::{BINARY_OPERATORS,DATATYPES,EXPRESSION_DELIMITERS};
 use crate::defs::{DataType,Expression,ExpressionType,Program};
-use crate::defs::{Statement,StatementType,Token,TokenType};
+use crate::defs::{Statement,StatementOptions,StatementType,Token,TokenType,Variable};
 use crate::utils::get_datatype_from_str;
 
 pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
@@ -48,7 +48,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   }
 
   fn get_no_operation_statement() -> Statement {
-    Statement::new(StatementType::NoOperation, None, None, None)
+    Statement::new(StatementType::NoOperation, None, None, None, None)
   }
 
   fn get_compound_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
@@ -67,21 +67,14 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
         .expect("Unclosed Compound Statement"); // TODO: Enhance error reporting
     }
     *index += 1; // Go past the closing curly brace '}'
-    return Statement::new(StatementType::Compound, None, None, Some(statements));
+    return Statement::new(StatementType::Compound, None, None, None, Some(statements));
   }
 
-  fn get_function_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
-    todo!("get_function_statement is not implemented yet")
-  }
-
-  /// Block statements consist of a Keyword, a condition in round brackets and a Compound Statement
-  fn get_block_statement(tokens: &Vec<Token>, index: &mut usize, block_type: &str) -> Statement {
-    *index += 1; // Go past 'if' Token
-
-    // Test if the next Token's value is an opening round bracket '('
-    let open_bracket: &Token = tokens.get(*index)
-      .expect("Expected '(' after 'if' but found nothing"); // TODO: Enhance error reporting
-    assert_eq!("(", open_bracket.value, "Expected '(' after 'if' but found '{}'", open_bracket.value);
+  fn get_expression_in_round_brackets(tokens: &Vec<Token>, index: &mut usize) -> Expression {
+    // Test if the current Token's value is an opening round bracket '('
+    let open_bracket: &str = tokens.get(*index)
+      .expect("Expected '(' after function name but found nothing").value; // TODO: Enhance error reporting
+    assert_eq!("(", open_bracket, "Expected '(' after 'if' but found '{}'", open_bracket);
     *index += 1;
 
     // Get Expression between round brackets
@@ -92,11 +85,79 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
       .expect("Expected ')' after if's Expression but found nothing"); // TODO: Enhance error reporting
     assert_eq!(")", open_bracket.value, "Expected ')' after if's Expression but found '{}'", open_bracket.value);
     *index += 1;
+    return expression;
+  }
 
+  fn get_function_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+    // Get function name from after 'fun' Token
+    let function_name: String = tokens.get(*index+1)
+      .expect("Expected function name but got nothing").value.to_string();
+
+    // Test if the next Token's value is an opening round bracket '('
+    let open_bracket: &str = tokens.get(*index+2)
+      .expect("Expected '(' after function name but found nothing").value; // TODO: Enhance error reporting
+    assert_eq!("(", open_bracket, "Expected '(' after 'if' but found '{}'", open_bracket);
+    *index += 3; // Go past the round bracket '('
+
+    // Gather function parameters
+    let parameters: Vec<Variable> = get_function_parameters(&function_name, tokens, index);
+    let return_type: DataType     = get_function_return_type(&function_name, tokens, index);
+    return Statement {
+      typ: StatementType::Function,
+      value: Some(function_name),
+      options: Some(StatementOptions{
+        parameters: parameters,
+        return_type: return_type,
+      }),
+      expression: None,
+      statements: Some(vec![get_compound_statement(tokens, index)]),
+    }
+  }
+
+  fn get_function_parameters(function_name: &String, tokens: &Vec<Token>, index: &mut usize) -> Vec<Variable> {
+    // TODO: Parse real function parameters
+    let mut parameters: Vec<Variable> = vec![];
+    while *index < tokens.len() {
+      let token: &Token = tokens.get(*index).unwrap();
+      *index += 1;
+      if token.value == ")" { return parameters }
+    }
+    panic!("Could not parse parameters for function '{}'", function_name);
+  }
+
+  fn get_function_return_type (function_name: &String, tokens: &Vec<Token>, index: &mut usize) -> DataType {
+    let first_token_value: &str = tokens.get(*index)
+      .expect("Deficient Tokens for function declaration").value;
+    *index += 1;
+    if first_token_value != "->" {
+      if first_token_value != "{" {
+        panic!("Expected '->' or '{}' but got '{}'", "{", first_token_value)
+      }
+      return DataType::None;
+    }
+
+    let datatype_str: &str = tokens.get(*index)
+      .expect("Expected return type but got nothing").value;
+    let datatype = get_datatype_from_str(datatype_str);
+
+    let open_curly: &str = tokens.get(*index+1)
+      .expect("Expected open curly bracket for function but got nothing").value;
+    if open_curly != "{" {
+      panic!("Expected function's opening curly bracket '{}' but got '{}'", "{", open_curly);
+    }
+    *index += 2;
+    return datatype;
+  }
+
+  /// Block statements consist of a Keyword, a condition in round brackets and a Compound Statement
+  fn get_block_statement(tokens: &Vec<Token>, index: &mut usize, block_type: &str) -> Statement {
+    *index += 1; // Go past 'if' Token
+    let expression: Expression = get_expression_in_round_brackets(tokens, index);
     let statement: Statement = get_compound_statement(tokens, index);
     Statement {
       typ: StatementType::Conditional,
       value: Some(block_type.to_string()),
+      options: None,
       expression: Some(expression),
       statements: Some(vec![statement]),
     }
@@ -105,7 +166,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   fn get_return_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
     *index += 1; // Go past 'return' Token
     let expression: Expression = get_next_expression(tokens, index);
-    return Statement::new(StatementType::Return, None, Some(expression), None)
+    return Statement::new(StatementType::Return, None, None, Some(expression), None)
   }
 
   fn get_variable_definition_statement(tokens: &Vec<Token>, index: &mut usize, datatype: DataType) -> Statement {
@@ -126,6 +187,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     Statement {
       typ: StatementType::Variable(datatype),
       value: Some(variable_name),
+      options: None,
       expression: Some(get_next_expression(tokens, index)),
       statements: None
     }
@@ -133,7 +195,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
   fn get_expression_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
     let expression: Expression = get_next_expression(tokens, index);
-    Statement::new(StatementType::Expression, None, Some(expression), None)
+    Statement::new(StatementType::Expression, None, None, Some(expression), None)
   }
 
   fn get_next_expression(tokens: &Vec<Token>, index: &mut usize) -> Expression {
@@ -248,8 +310,8 @@ mod tests {
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
       statements: vec![
-        Statement::new(StatementType::NoOperation, None, None, None),
-        Statement::new(StatementType::NoOperation, None, None, None),
+        Statement::new(StatementType::NoOperation, None, None, None, None),
+        Statement::new(StatementType::NoOperation, None, None, None, None),
       ]
     })
   }
@@ -265,7 +327,7 @@ mod tests {
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
       statements: vec![
-        Statement::new(StatementType::Return, None, Some(Expression::new(
+        Statement::new(StatementType::Return, None, None, Some(Expression::new(
           ExpressionType::Identifier, Some(variable_name.to_string()), None
         )), None),
       ]
@@ -285,9 +347,9 @@ mod tests {
     assert_eq!(program, Program {
       statements: vec![
         Statement::new(
-          StatementType::Compound, None, None, Some(vec![
-            Statement::new(StatementType::Compound, None, None, Some(vec![])),
-            Statement::new(StatementType::NoOperation, None, None, None),
+          StatementType::Compound, None, None, None, Some(vec![
+            Statement::new(StatementType::Compound, None, None, None, Some(vec![])),
+            Statement::new(StatementType::NoOperation, None, None, None, None),
           ])
         ),
       ] // statements
@@ -306,7 +368,7 @@ mod tests {
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
       statements: vec![
-        Statement::new(StatementType::Expression, None, Some(Expression::new(
+        Statement::new(StatementType::Expression, None, None, Some(Expression::new(
           ExpressionType::Unary, Some(unary_operator.to_string()), Some(vec![
             Expression::new(
               ExpressionType::Identifier, Some(variable_name.to_string()), None
@@ -332,7 +394,7 @@ mod tests {
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
       statements: vec![
-        Statement::new(StatementType::Expression, None, Some(Expression::new(
+        Statement::new(StatementType::Expression, None, None, Some(Expression::new(
           ExpressionType::Binary, Some("+".to_string()), Some(vec![
             Expression::new(
               ExpressionType::Identifier, Some("a".to_string()), None
@@ -371,6 +433,7 @@ mod tests {
         Statement {
           typ: StatementType::Variable(DataType::Integer),
           value: Some(variable_name.to_string()),
+          options: None,
           expression: Some(Expression::new(
             ExpressionType::Binary, Some("*".to_string()), Some(vec![
               Expression::new(
@@ -409,17 +472,20 @@ mod tests {
         Statement {
           typ: StatementType::Conditional,
           value: Some(keyword.to_string()),
+          options: None,
           expression: Some(Expression::new(
             ExpressionType::Identifier, Some(variable_name.to_string()), None
           )),
           statements: Some(vec![Statement {
             typ: StatementType::Compound,
             value: None,
+            options: None,
             expression: None,
             statements: Some(vec![
               Statement {
                 typ: StatementType::Return,
                 value: None,
+                options: None,
                 expression: Some(Expression {
                   typ: ExpressionType::Identifier,
                   value: Some(variable_name.to_string()),
@@ -457,17 +523,20 @@ mod tests {
         Statement {
           typ: StatementType::Conditional,
           value: Some(keyword.to_string()),
+          options: None,
           expression: Some(Expression::new(
             ExpressionType::Identifier, Some(variable_name.to_string()), None
           )),
           statements: Some(vec![Statement {
             typ: StatementType::Compound,
             value: None,
+            options: None,
             expression: None,
             statements: Some(vec![
               Statement {
                 typ: StatementType::Expression,
                 value: None,
+                options: None,
                 expression: Some(Expression {
                   typ: ExpressionType::Unary,
                   value: Some(unary_operator.to_string()),
