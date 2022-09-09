@@ -115,12 +115,40 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   }
 
   fn get_function_parameters(function_name: &String, tokens: &Vec<Token>, index: &mut usize) -> Vec<Parameter> {
-    // TODO: Parse real function parameters
     let mut parameters: Vec<Parameter> = vec![];
     while *index < tokens.len() {
-      let token: &Token = tokens.get(*index).unwrap();
-      *index += 1;
-      if token.value == ")" { return parameters }
+      // Example definition:
+      // fun sum(int a, int b) { return a+b; }
+
+      // Get Parameter's DataType
+      let datatype: &str = tokens.get(*index)
+        .expect("Expected parameter datatype but got nothing").value;
+      dbg!(&datatype);
+      if datatype == ")" {
+        *index += 1;
+        return parameters;
+      }
+      if !DATATYPES.contains(&datatype) {
+        panic!("Expected parameter datatype, got '{}'", datatype);
+      }
+
+      // Get Parameter's name
+      let parameter_name: String = tokens.get(*index+1)
+        .expect("Expected parameter name but got nothing").value.to_string();
+
+      // Append the parsed parameter to the Parameter list
+      parameters.push(Parameter {
+        name: parameter_name,
+        typ: get_datatype_from_str(datatype),
+      });
+      *index += 2; // Go past parameter name
+
+      // After Parameter declaration there should be either ',' or ')'
+      // ',' => There will be more Parameters
+      // ')' => Parameter declarations are over
+      let delimiter: &str = tokens.get(*index)
+        .expect("Expected ',' or ')' but found nothing").value;
+      if delimiter == "," { *index += 1; }  // Go past comma to the next parameter
     }
     panic!("Could not parse parameters for function '{}'", function_name);
   }
