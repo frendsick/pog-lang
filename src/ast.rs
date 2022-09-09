@@ -20,10 +20,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
     // Compound or NoOperation
     if token.typ == &TokenType::Delimiter {
-      if token.value == ";" {
-        *index += 1; // Go past the semicolon
-        return get_no_operation_statement()
-      }
+      if token.value == ";" { return get_no_operation_statement(index) }
       if token.value == "{" { return get_compound_statement(tokens, index) }
       panic!("Unexpected Delimiter at the beginning of Statement: '{}'", token.value)
     }
@@ -47,7 +44,8 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     return get_expression_statement(tokens, index);
   }
 
-  fn get_no_operation_statement() -> Statement {
+  fn get_no_operation_statement(index: &mut usize) -> Statement {
+    *index += 1; // Go past the semicolon
     Statement::new(StatementType::NoOperation, None, None, None, None)
   }
 
