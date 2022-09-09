@@ -123,7 +123,6 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
       // Get Parameter's DataType
       let datatype: &str = tokens.get(*index)
         .expect("Expected parameter datatype but got nothing").value;
-      dbg!(&datatype);
       if datatype == ")" {
         *index += 1;
         return parameters;
