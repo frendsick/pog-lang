@@ -44,9 +44,9 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   r"^/\*[\s\S]*\*/" => TokenType::None, // Multi-line comment
 
   // Literals
-  r"^'([^'])'"      => TokenType::Literal(DataType::Character),
+  r"^'[^']'"        => TokenType::Literal(DataType::Character),
   r"^\d+"           => TokenType::Literal(DataType::Integer),
-  r#"^"([^"]*)""#   => TokenType::Literal(DataType::String),
+  r#"^"[^"]*""#     => TokenType::Literal(DataType::String),
 
   // Datatypes
   r"^char"          => TokenType::DataType,
@@ -101,18 +101,6 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   // Identifier - Named value representing some value or other entity
   r"^[a-zA-Z_$][a-zA-Z_$0-9]*"  => TokenType::Identifier,
 );
-
-#[derive(Debug, Clone, PartialEq)]
-pub(crate) struct Token<'a> {
-  pub(crate) typ: &'a TokenType,
-  pub(crate) value: &'a str,
-}
-
-impl<'a> Token<'a> {
-  pub(crate) fn new(typ: &'a TokenType, value: &'a str) -> Self {
-    Self { typ: typ, value: value }
-  }
-}
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum TokenType {
