@@ -1,9 +1,9 @@
 use crate::defs::{BINARY_OPERATORS,DATATYPES,EXPRESSION_DELIMITERS};
 use crate::defs::{DataType,Expression,ExpressionType,Program};
-use crate::defs::{Statement,StatementOptions,Parameter,StatementType,Token,TokenType};
-use crate::utils::get_datatype_from_str;
+use crate::defs::{Statement,StatementOptions,Parameter,StatementType,TokenType};
+use crate::utils::{get_datatype_from_str,get_token_type};
 
-pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
+pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
   let mut statements: Vec<Statement> = vec![];
 
   // Parse all Statements from Tokens
@@ -15,28 +15,20 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     statements: statements,
   };
 
-  fn get_next_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
-    let mut token: &Token = tokens.get(*index).unwrap();
+  fn get_next_statement(tokens: &Vec<&str>, index: &mut usize) -> Statement {
+    let token: &str = tokens.get(*index).unwrap();
 
-    // Compound or NoOperation
-    if token.typ == &TokenType::Delimiter {
-      if token.value == ";" { return get_no_operation_statement(index) }
-      if token.value == "{" { return get_compound_statement(tokens, index) }
-      panic!("Unexpected Delimiter at the beginning of Statement: '{}'", token.value)
-    }
-
-    // Conditional, Function, Loop or Return
-    if token.typ == &TokenType::Keyword {
-      if token.value == "fun"     { return get_function_statement(tokens, index) }
-      if token.value == "if"      { return get_block_statement(tokens, index, "if") }
-      if token.value == "return"  { return get_return_statement(tokens, index) }
-      if token.value == "while"   { return get_block_statement(tokens, index, "while") }
-      panic!("Unexpected Keyword at the beginning of Statement: '{}'", token.value)
-    }
+    // Statements with known first Token
+    if token == ";"       { return get_no_operation_statement(index) }
+    if token == "{"       { return get_compound_statement(tokens, index) }
+    if token == "fun"     { return get_function_statement(tokens, index) }
+    if token == "if"      { return get_block_statement(tokens, index, "if") }
+    if token == "return"  { return get_return_statement(tokens, index) }
+    if token == "while"   { return get_block_statement(tokens, index, "while") }
 
     // Variable Definition
-    if DATATYPES.contains(&token.value) {
-      let variable_datatype: DataType = get_datatype_from_str(token.value);
+    if DATATYPES.contains(&token) {
+      let variable_datatype: DataType = get_datatype_from_str(token);
       return get_variable_definition_statement(tokens, index, variable_datatype);
     }
 
@@ -49,7 +41,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     Statement::new(StatementType::NoOperation, None, None, None, None)
   }
 
-  fn get_compound_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+  fn get_compound_statement(tokens: &Vec<&str>, index: &mut usize) -> Statement {
     *index += 1; // Go past the open curly brace '{'
     if index >= &mut tokens.len() {
       panic!("Program cannot end to open curly brace")
@@ -57,9 +49,9 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
     // Get all Statements inside the Compound Statement
     let mut statements: Vec<Statement> = vec![];
-    let mut token: &Token = tokens.get(*index)
+    let mut token: &str = tokens.get(*index)
       .expect("Unclosed Compound Statement"); // TODO: Enhance error reporting
-    while token.value != "}" {
+    while token != "}" {
       statements.push(get_next_statement(tokens, index));
       token = tokens.get(*index)
         .expect("Unclosed Compound Statement"); // TODO: Enhance error reporting
@@ -68,10 +60,10 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     return Statement::new(StatementType::Compound, None, None, None, Some(statements));
   }
 
-  fn get_expression_in_round_brackets(tokens: &Vec<Token>, index: &mut usize) -> Expression {
+  fn get_expression_in_round_brackets(tokens: &Vec<&str>, index: &mut usize) -> Expression {
     // Test if the current Token's value is an opening round bracket '('
     let open_bracket: &str = tokens.get(*index)
-      .expect("Expected '(' after function name but found nothing").value; // TODO: Enhance error reporting
+      .expect("Expected '(' after function name but found nothing"); // TODO: Enhance error reporting
     assert_eq!("(", open_bracket, "Expected '(' after 'if' but found '{}'", open_bracket);
     *index += 1;
 
@@ -79,27 +71,27 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     let expression: Expression = get_next_expression(tokens, index);
 
     // Test if the next Token's value is a closing round bracket ')'
-    let open_bracket: &Token = tokens.get(*index)
+    let open_bracket: &str = tokens.get(*index)
       .expect("Expected ')' after if's Expression but found nothing"); // TODO: Enhance error reporting
-    assert_eq!(")", open_bracket.value, "Expected ')' after if's Expression but found '{}'", open_bracket.value);
+    assert_eq!(open_bracket, ")", "Expected ')' after if's Expression but found '{}'", open_bracket);
     *index += 1;
     return expression;
   }
 
-  fn get_function_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+  fn get_function_statement(tokens: &Vec<&str>, index: &mut usize) -> Statement {
     // Get function name from after 'fun' Token
     let function_name: String = tokens.get(*index+1)
-      .expect("Expected function name but got nothing").value.to_string();
+      .expect("Expected function name but got nothing").to_string();
 
     // Test if the next Token's value is an opening round bracket '('
     let open_bracket: &str = tokens.get(*index+2)
-      .expect("Expected '(' after function name but found nothing").value; // TODO: Enhance error reporting
-    assert_eq!("(", open_bracket, "Expected '(' after 'if' but found '{}'", open_bracket);
+      .expect("Expected '(' after function name but found nothing"); // TODO: Enhance error reporting
+    assert_eq!(open_bracket, "(", "Expected '(' after 'if' but found '{}'", open_bracket);
     *index += 3; // Go past the round bracket '('
 
     // Gather function parameters
     let parameters: Vec<Parameter>  = get_function_parameters(&function_name, tokens, index);
-    let return_type: DataType       = get_function_return_type(&function_name, tokens, index);
+    let return_type: DataType       = get_function_return_type(tokens, index);
     return Statement {
       typ: StatementType::Function,
       value: Some(function_name),
@@ -112,7 +104,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     }
   }
 
-  fn get_function_parameters(function_name: &String, tokens: &Vec<Token>, index: &mut usize) -> Vec<Parameter> {
+  fn get_function_parameters(function_name: &String, tokens: &Vec<&str>, index: &mut usize) -> Vec<Parameter> {
     let mut parameters: Vec<Parameter> = vec![];
     while *index < tokens.len() {
       // Example definition:
@@ -120,7 +112,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
       // Get Parameter's DataType
       let datatype: &str = tokens.get(*index)
-        .expect("Expected parameter datatype but got nothing").value;
+        .expect("Expected parameter datatype but got nothing");
       if datatype == ")" {
         *index += 1;
         return parameters;
@@ -131,7 +123,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
       // Get Parameter's name
       let parameter_name: String = tokens.get(*index+1)
-        .expect("Expected parameter name but got nothing").value.to_string();
+        .expect("Expected parameter name but got nothing").to_string();
 
       // Append the parsed parameter to the Parameter list
       parameters.push(Parameter {
@@ -144,15 +136,15 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
       // ',' => There will be more Parameters
       // ')' => Parameter declarations are over
       let delimiter: &str = tokens.get(*index)
-        .expect("Expected ',' or ')' but found nothing").value;
+        .expect("Expected ',' or ')' but found nothing");
       if delimiter == "," { *index += 1; }  // Go past comma to the next parameter
     }
     panic!("Could not parse parameters for function '{}'", function_name);
   }
 
-  fn get_function_return_type (function_name: &String, tokens: &Vec<Token>, index: &mut usize) -> DataType {
+  fn get_function_return_type(tokens: &Vec<&str>, index: &mut usize) -> DataType {
     let first_token_value: &str = tokens.get(*index)
-      .expect("Deficient Tokens for function declaration").value;
+      .expect("Deficient Tokens for function declaration");
     *index += 1;
     if first_token_value != "->" {
       if first_token_value != "{" {
@@ -162,11 +154,11 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     }
 
     let datatype_str: &str = tokens.get(*index)
-      .expect("Expected return type but got nothing").value;
+      .expect("Expected return type but got nothing");
     let datatype = get_datatype_from_str(datatype_str);
 
     let open_curly: &str = tokens.get(*index+1)
-      .expect("Expected open curly bracket for function but got nothing").value;
+      .expect("Expected open curly bracket for function but got nothing");
     if open_curly != "{" {
       panic!("Expected function's opening curly bracket '{}' but got '{}'", "{", open_curly);
     }
@@ -175,7 +167,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
   }
 
   /// Block statements consist of a Keyword, a condition in round brackets and a Compound Statement
-  fn get_block_statement(tokens: &Vec<Token>, index: &mut usize, block_type: &str) -> Statement {
+  fn get_block_statement(tokens: &Vec<&str>, index: &mut usize, block_type: &str) -> Statement {
     *index += 1; // Go past 'if' Token
     let expression: Expression = get_expression_in_round_brackets(tokens, index);
     let statement: Statement = get_compound_statement(tokens, index);
@@ -188,21 +180,21 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     }
   }
 
-  fn get_return_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+  fn get_return_statement(tokens: &Vec<&str>, index: &mut usize) -> Statement {
     *index += 1; // Go past 'return' Token
     let expression: Expression = get_next_expression(tokens, index);
     return Statement::new(StatementType::Return, None, None, Some(expression), None)
   }
 
-  fn get_variable_definition_statement(tokens: &Vec<Token>, index: &mut usize, datatype: DataType) -> Statement {
+  fn get_variable_definition_statement(tokens: &Vec<&str>, index: &mut usize, datatype: DataType) -> Statement {
     // Get variable name from after the DataType Token ('char', 'int', 'str', ...)
     let variable_name: String = tokens.get(*index+1)
-      .expect("Could not get Identifier for variable definition").value.to_string();
+      .expect("Could not get Identifier for variable definition").to_string();
 
     // Verify if the next Token is '='
     // Note: Other assignment operators like '+=' and '*=' do not make sense when declaring variable
     let assignment_token_value: &str = tokens.get(*index+2)
-      .expect("Expected '=' in variable definition but got nothing").value;
+      .expect("Expected '=' in variable definition but got nothing");
     if assignment_token_value != "=" {
       panic!("Expected '=' in variable definition but got '{}'", assignment_token_value)
     }
@@ -218,31 +210,31 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     }
   }
 
-  fn get_expression_statement(tokens: &Vec<Token>, index: &mut usize) -> Statement {
+  fn get_expression_statement(tokens: &Vec<&str>, index: &mut usize) -> Statement {
     let expression: Expression = get_next_expression(tokens, index);
     Statement::new(StatementType::Expression, None, None, Some(expression), None)
   }
 
-  fn get_next_expression(tokens: &Vec<Token>, index: &mut usize) -> Expression {
-    let first_token: &Token = tokens.get(*index)
+  fn get_next_expression(tokens: &Vec<&str>, index: &mut usize) -> Expression {
+    let first_token: &str = tokens.get(*index)
       .expect("There are no Tokens left for Expression");
 
     // Unary Expressions
     // TODO: Parse post-increment and post-decrement expressions
-    if first_token.typ == &TokenType::UnaryOperator {
-      return get_unary_expression(first_token.value.to_string(), tokens, index)
+    if get_token_type(first_token) == &TokenType::UnaryOperator {
+      return get_unary_expression(first_token.to_string(), tokens, index)
     }
     let lookahead_value: &str = tokens.get(*index+1)
-      .expect("Lookahead failed in get_next_expression: Program cannot end to an Expression").value;
+      .expect("Lookahead failed in get_next_expression: Program cannot end to an Expression");
 
     // Literal Expressions
     if EXPRESSION_DELIMITERS.contains(&lookahead_value) {
       *index += 1;
       if lookahead_value == "(" {
-        return get_function_call_expression(first_token.value.to_string(), tokens, index);
+        return get_function_call_expression(first_token.to_string(), tokens, index);
       }
       if lookahead_value == ";" { *index += 1; }
-      return get_literal_expression(first_token);
+      return get_literal_expression(&first_token);
     }
 
     // Define the type of Expression from the next Expression delimiter
@@ -250,7 +242,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     while temp_index < tokens.len() {
       temp_index += 1;
       let token_value: &str = tokens.get(temp_index)
-        .expect("Could not parse current Expression's type").value;
+        .expect("Could not parse current Expression's type");
 
       // TODO: Parse other binary Expressions than Literals as LHS
       if BINARY_OPERATORS.contains(&token_value) {
@@ -262,7 +254,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     todo!("Parsing this kind of Expression is not implemented yet: {:?}", first_token);
   }
 
-  fn get_unary_expression(operator: String, tokens: &Vec<Token>, index: &mut usize) -> Expression {
+  fn get_unary_expression(operator: String, tokens: &Vec<&str>, index: &mut usize) -> Expression {
     *index += 1; // Go past unary operator
     Expression {
       value: Some(operator),
@@ -273,7 +265,7 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     }
   }
 
-  fn get_binary_expression(operator: String, tokens: &Vec<Token>, index: &mut usize) -> Expression {
+  fn get_binary_expression(operator: String, tokens: &Vec<&str>, index: &mut usize) -> Expression {
     // TODO: Parse other LHS Expressions than Literals
     let left: Expression  = get_literal_expression(tokens.get(*index).unwrap());
     *index += 2; // Go past binary operator
@@ -288,24 +280,24 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
     }
   }
 
-  fn get_literal_expression(token: &Token) -> Expression {
-    if token.typ == &TokenType::Literal(DataType::Character) {
-      return get_character_literal_expression(token.value.to_string())
+  fn get_literal_expression(token: &str) -> Expression {
+    if get_token_type(token) == &TokenType::Literal(DataType::Character) {
+      return get_character_literal_expression(token.to_string())
     }
-    if token.typ == &TokenType::Literal(DataType::Integer) {
-      return get_integer_literal_expression(token.value.to_string())
+    if get_token_type(token) == &TokenType::Literal(DataType::Integer) {
+      return get_integer_literal_expression(token.to_string())
     }
-    if token.typ == &TokenType::Literal(DataType::String) {
-      return get_string_literal_expression(token.value.to_string())
+    if get_token_type(token) == &TokenType::Literal(DataType::String) {
+      return get_string_literal_expression(token.to_string())
     }
     // Identifier
-    return get_identifier_literal_expression(token.value.to_string())
+    return get_identifier_literal_expression(token.to_string())
   }
 
-  fn get_function_call_expression(function_name: String, tokens: &Vec<Token>, index: &mut usize) -> Expression {
+  fn get_function_call_expression(function_name: String, tokens: &Vec<&str>, index: &mut usize) -> Expression {
     *index += 1; // Go past opening round bracket of function call
     let mut token_value: &str = tokens.get(*index)
-      .expect("Expected function parameter but got nothing").value;
+      .expect("Expected function parameter but got nothing");
 
     // Parse all parameter Expressions for the function
     let mut parameter_expressions: Vec<Expression> = vec![];
@@ -314,13 +306,13 @@ pub(crate) fn generate_ast(tokens: &Vec<Token>) -> Program {
 
       // Verify if the current Token is ',' or ')'
       token_value = tokens.get(*index)
-      .expect("Expected function parameter but got nothing").value;
+      .expect("Expected function parameter but got nothing");
       *index += 1;
     }
 
     // Verify that the last token of the expression is ';'
     token_value = tokens.get(*index)
-      .expect("Expected ';' but got nothing").value;
+      .expect("Expected ';' but got nothing");
     if token_value != ";" { panic!("Expected ';' but got '{}'", token_value) }
     *index += 1;
 
@@ -370,9 +362,8 @@ mod tests {
 
   #[test]
   fn test_no_operation_statement_ast() {
-    let tokens: Vec<Token> = vec![
-      Token::new(&TokenType::Delimiter, ";"),
-      Token::new(&TokenType::Delimiter, ";"),
+    let tokens: Vec<&str> = vec![
+      ";", ";",
     ];
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
@@ -386,10 +377,8 @@ mod tests {
   #[test]
   fn test_return_statement_ast() {
     let variable_name: &str = "var_name";
-    let tokens: Vec<Token> = vec![
-      Token::new(&TokenType::Keyword, "return"),
-      Token::new(&TokenType::Identifier, variable_name),
-      Token::new(&TokenType::Delimiter, ";"),
+    let tokens: Vec<&str> = vec![
+      "return", variable_name, ";",
     ];
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
@@ -403,12 +392,8 @@ mod tests {
 
   #[test]
   fn test_nested_compound_statement_ast() {
-    let tokens: Vec<Token> = vec![
-      Token::new(&TokenType::Delimiter, "{"),
-      Token::new(&TokenType::Delimiter, "{"),
-      Token::new(&TokenType::Delimiter, "}"),
-      Token::new(&TokenType::Delimiter, ";"),
-      Token::new(&TokenType::Delimiter, "}"),
+    let tokens: Vec<&str> = vec![
+      "{", "{", "}", ";", "}",
     ];
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
@@ -427,10 +412,8 @@ mod tests {
   fn test_unary_expression_statement_ast() {
     let unary_operator: &str  = "++";
     let variable_name: &str   = "var_name";
-    let tokens: Vec<Token>    = vec![
-      Token::new(&TokenType::UnaryOperator, unary_operator),
-      Token::new(&TokenType::Identifier, variable_name),
-      Token::new(&TokenType::Delimiter, ";"),
+    let tokens: Vec<&str>    = vec![
+      unary_operator, variable_name, ";"
     ];
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
@@ -450,13 +433,8 @@ mod tests {
   fn test_binary_expression_statement_ast() {
     // TODO: Test correct operator precedence
     // a + b * c
-    let tokens: Vec<Token>    = vec![
-      Token::new(&TokenType::Identifier, "a"),
-      Token::new(&TokenType::BinaryOperator, "+"),
-      Token::new(&TokenType::Identifier, "b"),
-      Token::new(&TokenType::BinaryOperator, "*"),
-      Token::new(&TokenType::Identifier, "c"),
-      Token::new(&TokenType::Delimiter, ";"),
+    let tokens: Vec<&str>    = vec![
+      "a", "+", "b", "*", "c", ";",
     ];
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
@@ -485,14 +463,8 @@ mod tests {
   #[test]
   fn test_variable_assignment_statement_ast() {
     let variable_name: &str = "var_name";
-    let tokens: Vec<Token> = vec![
-      Token::new(&TokenType::DataType, "int"),
-      Token::new(&TokenType::Identifier, variable_name),
-      Token::new(&TokenType::BinaryOperator, "="),
-      Token::new(&TokenType::Identifier, "a"),
-      Token::new(&TokenType::BinaryOperator, "*"),
-      Token::new(&TokenType::Identifier, "b"),
-      Token::new(&TokenType::Delimiter, ";"),
+    let tokens: Vec<&str> = vec![
+      "int", variable_name, "=", "a", "*", "b", ";",
     ];
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
@@ -522,16 +494,11 @@ mod tests {
     // if(var_name) { return var_name; }
     let keyword: &str       = "if";
     let variable_name: &str = "var_name";
-    let tokens: Vec<Token>  = vec![
-      Token::new(&TokenType::Keyword, keyword),
-      Token::new(&TokenType::Delimiter, "("),
-      Token::new(&TokenType::Identifier, variable_name),
-      Token::new(&TokenType::Delimiter, ")"),
-      Token::new(&TokenType::Delimiter, "{"),
-      Token::new(&TokenType::Keyword, "return"),
-      Token::new(&TokenType::Identifier, variable_name),
-      Token::new(&TokenType::Delimiter, ";"),
-      Token::new(&TokenType::Delimiter, "}"),
+    let tokens: Vec<&str>  = vec![
+      keyword, "(", variable_name, ")",
+      "{",
+        "return", variable_name, ";",
+      "}",
     ];
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {
@@ -573,16 +540,11 @@ mod tests {
     let keyword: &str         = "while";
     let unary_operator: &str  = "--";
     let variable_name: &str   = "var_name";
-    let tokens: Vec<Token>    = vec![
-      Token::new(&TokenType::Keyword, keyword),
-      Token::new(&TokenType::Delimiter, "("),
-      Token::new(&TokenType::Identifier, variable_name),
-      Token::new(&TokenType::Delimiter, ")"),
-      Token::new(&TokenType::Delimiter, "{"),
-      Token::new(&TokenType::UnaryOperator, unary_operator),
-      Token::new(&TokenType::Identifier, variable_name),
-      Token::new(&TokenType::Delimiter, ";"),
-      Token::new(&TokenType::Delimiter, "}"),
+    let tokens: Vec<&str>    = vec![
+      keyword, "(", variable_name, ")",
+      "{",
+        unary_operator, variable_name, ";",
+      "}",
     ];
     let program: Program = generate_ast(&tokens);
     assert_eq!(program, Program {

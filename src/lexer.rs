@@ -1,5 +1,5 @@
 use regex::{Captures,Match,Regex};
-use crate::defs::{TOKEN_REGEXES,DataType,Token,TokenType};
+use crate::defs::{TOKEN_REGEXES,TokenType};
 
 #[derive(Debug)]
 pub(crate) struct Parser<'a> {
@@ -13,10 +13,10 @@ impl<'a> Parser<'a> {
     }
   }
 
-  pub(crate) fn parse(&mut self) -> Vec<Token> {
-    let mut tokens: Vec<Token> = vec![];
+  pub(crate) fn parse(&mut self) -> Vec<&str> {
+    let mut tokens: Vec<&str> = vec![];
     loop {
-      let token: Option<Token> = self.tokenizer.get_next_token();
+      let token: Option<&str> = self.tokenizer.get_next_token();
       if token.is_none() { break }
       tokens.push(token.unwrap());
     }
@@ -39,7 +39,7 @@ impl<'a> Tokenizer<'a> {
     self.cursor < self.code.len()
   }
 
-  fn get_next_token(&mut self) -> Option<Token<'a>> {
+  fn get_next_token(&mut self) -> Option<&'a str> {
     if !self.has_more_tokens() { return None }
     
     // Test if the remaining code matches with any Token regex
@@ -60,8 +60,7 @@ impl<'a> Tokenizer<'a> {
 
         // Token should be skipped, e.g. whitespace or comment
         if token_type == &TokenType::None { return self.get_next_token() }
-
-        return Some(Token::new(token_type, token_match.unwrap().as_str()))
+        return Some(token_match.unwrap().as_str())
       }
     }
 
@@ -77,37 +76,29 @@ mod tests {
   #[test]
   fn test_lexing_comments() {
     let mut parser: Parser = Parser::init("/* multi\nline */ 42 // single-line");
-    let tokens: Vec<Token> = parser.parse();
-    assert_eq!( tokens, vec![
-      Token::new(&TokenType::Literal(DataType::Integer), "42"),
-    ]);
+    let tokens: Vec<&str> = parser.parse();
+    assert_eq!( tokens, vec![ "42" ]);
   }
 
   #[test]
   fn test_lexing_character() {
     let mut parser: Parser = Parser::init("'c'");
-    let tokens: Vec<Token> = parser.parse();
-    assert_eq!( tokens, vec![
-      Token::new(&TokenType::Literal(DataType::Character), "c"),
-    ]);
+    let tokens: Vec<&str> = parser.parse();
+    assert_eq!( tokens, vec![ "'c'" ]);
   }
 
   #[test]
   fn test_lexing_integer() {
     let mut parser: Parser = Parser::init("42");
-    let tokens: Vec<Token> = parser.parse();
-    assert_eq!( tokens, vec![
-      Token::new(&TokenType::Literal(DataType::Integer), "42"),
-    ]);
+    let tokens: Vec<&str> = parser.parse();
+    assert_eq!( tokens, vec![ "42" ]);
   }
 
   #[test]
   fn test_lexing_string() {
     let mut parser: Parser = Parser::init("\"This is String\"");
-    let tokens: Vec<Token> = parser.parse();
-    assert_eq!( tokens, vec![
-      Token::new(&TokenType::Literal(DataType::String), "This is String"),
-    ]);
+    let tokens: Vec<&str> = parser.parse();
+    assert_eq!( tokens, vec![ "\"This is String\"" ]);
   }
 
   fn count_token_types(token_type: TokenType) -> usize {
@@ -125,11 +116,9 @@ mod tests {
 
     let datatypes: &str = "char int str";
     let mut parser: Parser = Parser::init(datatypes);
-    let tokens: Vec<Token> = parser.parse();
+    let tokens: Vec<&str> = parser.parse();
     assert_eq!( tokens, vec![
-      Token::new(&TokenType::DataType, "char"),
-      Token::new(&TokenType::DataType, "int"),
-      Token::new(&TokenType::DataType, "str"),
+      "char", "int", "str",
     ]);
   }
 
@@ -140,16 +129,16 @@ mod tests {
 
     let keywords: &str = "break continue elif else fun if return while";
     let mut parser: Parser = Parser::init(keywords);
-    let tokens: Vec<Token> = parser.parse();
+    let tokens: Vec<&str> = parser.parse();
     assert_eq!( tokens, vec![
-      Token::new(&TokenType::Keyword, "break"),
-      Token::new(&TokenType::Keyword, "continue"),
-      Token::new(&TokenType::Keyword, "elif"),
-      Token::new(&TokenType::Keyword, "else"),
-      Token::new(&TokenType::Keyword, "fun"),
-      Token::new(&TokenType::Keyword, "if"),
-      Token::new(&TokenType::Keyword, "return"),
-      Token::new(&TokenType::Keyword, "while"),
+      "break",
+      "continue",
+      "elif",
+      "else",
+      "fun",
+      "if",
+      "return",
+      "while",
     ]);
   }
 
@@ -160,12 +149,9 @@ mod tests {
 
     let operators: &str = "++ -- ! &";
     let mut parser: Parser = Parser::init(operators);
-    let tokens: Vec<Token> = parser.parse();
+    let tokens: Vec<&str> = parser.parse();
     assert_eq!( tokens, vec![
-      Token::new(&TokenType::UnaryOperator, "++"),
-      Token::new(&TokenType::UnaryOperator, "--"),
-      Token::new(&TokenType::UnaryOperator, "!"),
-      Token::new(&TokenType::UnaryOperator, "&"),
+      "++", "--", "!", "&"
     ]);
   }
 
@@ -174,25 +160,13 @@ mod tests {
     let operator_count: usize = count_token_types(TokenType::BinaryOperator);
     assert_eq!(operator_count, 15, "Exhaustive testing of BinaryOperators");
 
-    let operators: &str = "+ / == >= > <= < * != - = += -= *= /=";
+    let operators: &str = "+ - / * == != >= > <= < = += -= *= /=";
     let mut parser: Parser = Parser::init(operators);
-    let tokens: Vec<Token> = parser.parse();
+    let tokens: Vec<&str> = parser.parse();
     assert_eq!( tokens, vec![
-      Token::new(&TokenType::BinaryOperator, "+"),
-      Token::new(&TokenType::BinaryOperator, "/"),
-      Token::new(&TokenType::BinaryOperator, "=="),
-      Token::new(&TokenType::BinaryOperator, ">="),
-      Token::new(&TokenType::BinaryOperator, ">"),
-      Token::new(&TokenType::BinaryOperator, "<="),
-      Token::new(&TokenType::BinaryOperator, "<"),
-      Token::new(&TokenType::BinaryOperator, "*"),
-      Token::new(&TokenType::BinaryOperator, "!="),
-      Token::new(&TokenType::BinaryOperator, "-"),
-      Token::new(&TokenType::BinaryOperator, "="),
-      Token::new(&TokenType::BinaryOperator, "+="),
-      Token::new(&TokenType::BinaryOperator, "-="),
-      Token::new(&TokenType::BinaryOperator, "*="),
-      Token::new(&TokenType::BinaryOperator, "/="),
+      "+", "-", "/", "*",
+      "==", "!=", ">=", ">", "<=", "<",
+      "=", "+=", "-=", "*=", "/=",
     ]);
   }
 
@@ -203,53 +177,36 @@ mod tests {
 
     let delimiters: &str = "()[]{}->:,;";
     let mut parser: Parser = Parser::init(delimiters);
-    let tokens: Vec<Token> = parser.parse();
+    let tokens: Vec<&str> = parser.parse();
     assert_eq!( tokens, vec![
-      Token::new(&TokenType::Delimiter, "("),
-      Token::new(&TokenType::Delimiter, ")"),
-      Token::new(&TokenType::Delimiter, "["),
-      Token::new(&TokenType::Delimiter, "]"),
-      Token::new(&TokenType::Delimiter, "{"),
-      Token::new(&TokenType::Delimiter, "}"),
-      Token::new(&TokenType::Delimiter, "->"),
-      Token::new(&TokenType::Delimiter, ":"),
-      Token::new(&TokenType::Delimiter, ","),
-      Token::new(&TokenType::Delimiter, ";"),
+      "(",  ")",
+      "[",  "]",
+      "{",  "}",
+      "->", ":",
+      ",",  ";",
     ]);
   }
 
   #[test]
   fn test_lexing_assignment_statement() {
     let mut parser: Parser = Parser::init("a += 42;");
-    let tokens: Vec<Token> = parser.parse();
+    let tokens: Vec<&str> = parser.parse();
     assert_eq!( tokens, vec![
-      Token::new(&TokenType::Identifier, "a"),
-      Token::new(&TokenType::BinaryOperator, "+="),
-      Token::new(&TokenType::Literal(DataType::Integer), "42"),
-      Token::new(&TokenType::Delimiter, ";"),
+      "a", "+=", "42", ";",
     ]);
   }
 
   #[test]
   fn test_lexing_if_else() {
     let mut parser: Parser = Parser::init("if a==b { a++; } else { --a; }");
-    let tokens: Vec<Token> = parser.parse();
+    let tokens: Vec<&str> = parser.parse();
     assert_eq!( tokens, vec![
-      Token::new(&TokenType::Keyword, "if"),
-      Token::new(&TokenType::Identifier, "a"),
-      Token::new(&TokenType::BinaryOperator, "=="),
-      Token::new(&TokenType::Identifier, "b"),
-      Token::new(&TokenType::Delimiter, "{"),
-      Token::new(&TokenType::Identifier, "a"),
-      Token::new(&TokenType::UnaryOperator, "++"),
-      Token::new(&TokenType::Delimiter, ";"),
-      Token::new(&TokenType::Delimiter, "}"),
-      Token::new(&TokenType::Keyword, "else"),
-      Token::new(&TokenType::Delimiter, "{"),
-      Token::new(&TokenType::UnaryOperator, "--"),
-      Token::new(&TokenType::Identifier, "a"),
-      Token::new(&TokenType::Delimiter, ";"),
-      Token::new(&TokenType::Delimiter, "}"),
+      "if", "a", "==", "b", "{",
+        "a", "++", ";",
+      "}",
+      "else", "{",
+      "--", "a", ";",
+      "}",
     ]);
   }
 }
