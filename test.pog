@@ -2,6 +2,7 @@
  * This is multi line comment
  */
 
+// This function sums two integers
 fun sum(int a, int b) -> int {
   return a+b;
 }
@@ -9,11 +10,9 @@ fun sum(int a, int b) -> int {
 fun main() {
   int a = 34;
   int b = 35;
-  int c = print(sum(a,b));
+  int c = sum(a,b);
 
-  if c == 69 {
+  if (c == 69) {
     print("Nice");
-  } else {
-    print("Not nice");
   }
 }
