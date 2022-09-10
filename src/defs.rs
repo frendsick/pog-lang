@@ -41,7 +41,7 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
 
   // Comments
   r"^//.*"          => TokenType::None, // Single-line comment
-  r"^/\*[\s\S]*\*/" => TokenType::None, // Multi-line comment
+  r"^/\*[\s\S]*?\*/"=> TokenType::None, // Multi-line comment
 
   // Literals
   r"^'[^']'"        => TokenType::Literal(DataType::Character),
