@@ -23,6 +23,8 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
     if token == "{"       { return get_compound_statement(tokens, index) }
     if token == "fun"     { return get_function_statement(tokens, index) }
     if token == "if"      { return get_block_statement(tokens, index, "if") }
+    if token == "elif"    { return get_block_statement(tokens, index, "elif") }
+    if token == "else"    { todo!("Parsing 'else' statements are not implemented") }
     if token == "return"  { return get_return_statement(tokens, index) }
     if token == "while"   { return get_block_statement(tokens, index, "while") }
 
@@ -51,6 +53,8 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
     let mut statements: Vec<Statement> = vec![];
     let mut token: &str = tokens.get(*index)
       .expect("Unclosed Compound Statement"); // TODO: Enhance error reporting
+
+    // Closing curly bracket ends the compound statement
     while token != "}" {
       statements.push(get_next_statement(tokens, index));
       token = tokens.get(*index)
@@ -169,10 +173,17 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
   /// Block statements consist of a Keyword, a condition in round brackets and a Compound Statement
   fn get_block_statement(tokens: &Vec<&str>, index: &mut usize, block_type: &str) -> Statement {
     *index += 1; // Go past 'if' Token
-    let expression: Expression = get_expression_in_round_brackets(tokens, index);
-    let statement: Statement = get_compound_statement(tokens, index);
+    let expression: Expression  = get_expression_in_round_brackets(tokens, index);
+    let statement: Statement    = get_compound_statement(tokens, index);
+
+    // If, elif, else
+    let mut typ: StatementType  = StatementType::Conditional;
+
+    // While
+    if block_type == "while" { typ = StatementType::Loop; }
+
     Statement {
-      typ: StatementType::Conditional,
+      typ: typ,
       value: Some(block_type.to_string()),
       options: None,
       expression: Some(expression),
@@ -550,7 +561,7 @@ mod tests {
     assert_eq!(program, Program {
       statements: vec![
         Statement {
-          typ: StatementType::Conditional,
+          typ: StatementType::Loop,
           value: Some(keyword.to_string()),
           options: None,
           expression: Some(Expression::new(
