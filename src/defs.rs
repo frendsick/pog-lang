@@ -252,10 +252,12 @@ impl fmt::Display for Expression {
         let operator: &String = self.value.as_ref().unwrap();
         let lhs: &String = self.expressions.as_ref().unwrap()[0]
           .value.as_ref().unwrap();
-        // TODO: Parsing Expression RHS
-        let rhs: &String = self.expressions.as_ref().unwrap()[1]
-          .value.as_ref().unwrap();
-        write!(f, "{}{}{}", lhs, operator, rhs)
+        if self.expressions.as_ref().unwrap()[1].expressions.is_none() {
+          write!(f, "{}{}{}", lhs, operator, self.expressions.as_ref().unwrap()[1].value.as_ref().unwrap()).unwrap();
+        } else {
+          write!(f, "{}{}{}", lhs, operator, self.expressions.as_ref().unwrap()[1]).unwrap();
+        }
+        Ok(())
       },
       ExpressionType::Enclosure           => todo!(),
       ExpressionType::FunctionCall        => todo!(),
