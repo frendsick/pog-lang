@@ -195,14 +195,17 @@ impl fmt::Display for Statement {
       StatementType::Expression => {
         write!(f, "{};", self.expression.as_ref().unwrap())
       },
-      StatementType::Function       => todo!(),
+      StatementType::Function => {
+        let name: &String = self.value.as_ref().unwrap();
+        write!(f, "fun {} {}", name, self.statements.as_ref().unwrap()[0])
+      },
       StatementType::Loop => {
         let typ: &String = self.value.as_ref().unwrap();
         let expression: &Expression = self.expression.as_ref().unwrap();
         write!(f, "{} ({}) {}", typ, expression, self.statements.as_ref().unwrap()[0])
       },
       StatementType::NoOperation => write!(f, "NoOp"),
-      StatementType::Return         => {
+      StatementType::Return => {
         write!(f, "return {};", self.expression.as_ref().unwrap())
       },
       StatementType::Variable(typ)  => todo!()
