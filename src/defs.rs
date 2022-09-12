@@ -260,8 +260,16 @@ impl fmt::Display for Expression {
         Ok(())
       },
       ExpressionType::Enclosure           => todo!(),
-      ExpressionType::FunctionCall        => todo!(),
-      ExpressionType::Identifier => write!(f, "{:?}", self.value.as_ref().unwrap()),
+      ExpressionType::FunctionCall => {
+        let name: &String = self.value.as_ref().unwrap();
+        write!(f, "{}(", name).unwrap();
+        for (index, expression) in self.expressions.as_ref().unwrap().iter().enumerate() {
+          if index > 0 { write!(f, ", ").unwrap() }
+          write!(f, "{}", expression).unwrap()
+        }
+        write!(f, ")")
+      },
+      ExpressionType::Identifier => write!(f, "{}", self.value.as_ref().unwrap()),
       ExpressionType::Indexing            => todo!(),
       ExpressionType::Literal(typ) => {
         let value: &String = self.value.as_ref().unwrap();
