@@ -317,16 +317,12 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
 
       // Verify if the current Token is ',' or ')'
       token_value = tokens.get(*index)
-      .expect("Expected function parameter but got nothing");
+        .expect("Expected function parameter but got nothing");
+      if token_value == ")" { break }
       *index += 1;
     }
 
-    // Verify that the last token of the expression is ';'
-    token_value = tokens.get(*index)
-      .expect("Expected ';' but got nothing");
-    if token_value != ";" { panic!("Expected ';' but got '{}'", token_value) }
-    *index += 1;
-
+    *index += 1; // Go past ')' Token
     Expression {
       typ: ExpressionType::FunctionCall,
       value: Some(function_name),
