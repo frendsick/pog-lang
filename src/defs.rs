@@ -233,6 +233,7 @@ impl fmt::Display for Expression {
         let operator: &String = self.value.as_ref().unwrap();
         let lhs: &String = self.expressions.as_ref().unwrap()[0]
           .value.as_ref().unwrap();
+        // TODO: Parsing Expression RHS
         let rhs: &String = self.expressions.as_ref().unwrap()[1]
           .value.as_ref().unwrap();
         write!(f, "{}{}{}", lhs, operator, rhs)
@@ -249,7 +250,13 @@ impl fmt::Display for Expression {
           write!(f, "{:?}", value)
         }
       },
-      ExpressionType::Unary               => todo!()
+      ExpressionType::Unary => {
+        let operator: &String = self.value.as_ref().unwrap();
+        // TODO: Parsing Expression value
+        let value: &String = self.expressions.as_ref().unwrap()[0]
+          .value.as_ref().unwrap();
+        write!(f, "{}{}", operator, value)
+      }
     }
   }
 }
