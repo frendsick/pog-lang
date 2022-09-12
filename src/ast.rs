@@ -149,7 +149,6 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
   fn get_function_return_type(tokens: &Vec<&str>, index: &mut usize) -> DataType {
     let first_token_value: &str = tokens.get(*index)
       .expect("Deficient Tokens for function declaration");
-    *index += 1;
     if first_token_value != "->" {
       if first_token_value != "{" {
         panic!("Expected '->' or '{}' but got '{}'", "{", first_token_value)
@@ -157,6 +156,7 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
       return DataType::None;
     }
 
+    *index += 1;
     let datatype_str: &str = tokens.get(*index)
       .expect("Expected return type but got nothing");
     let datatype = get_datatype_from_str(datatype_str);
@@ -166,7 +166,7 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
     if open_curly != "{" {
       panic!("Expected function's opening curly bracket '{}' but got '{}'", "{", open_curly);
     }
-    *index += 2;
+    *index += 1;
     return datatype;
   }
 
