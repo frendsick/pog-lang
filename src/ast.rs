@@ -58,27 +58,23 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
     while token != "}" {
       statements.push(get_next_statement(tokens, index));
       token = tokens.get(*index)
-        .expect("Unclosed Compound Statement"); // TODO: Enhance error reporting
+        .expect("Unexpected EOF: Unclosed Compound Statement"); // TODO: Enhance error reporting
     }
-    *index += 1; // Go past the closing curly brace '}'
+
+    // Go past the closing curly brace '}'
+    eat_token("}", tokens, index);
     return Statement::new(StatementType::Compound, None, None, None, Some(statements));
   }
 
   fn get_expression_in_round_brackets(tokens: &Vec<&str>, index: &mut usize) -> Expression {
     // Test if the current Token's value is an opening round bracket '('
-    let open_bracket: &str = tokens.get(*index)
-      .expect("Expected '(' after function name but found nothing"); // TODO: Enhance error reporting
-    assert_eq!("(", open_bracket, "Expected '(' after 'if' but found '{}'", open_bracket);
-    *index += 1;
+    eat_token("(", tokens, index);
 
     // Get Expression between round brackets
     let expression: Expression = get_next_expression(tokens, index);
 
-    // Test if the next Token's value is a closing round bracket ')'
-    let open_bracket: &str = tokens.get(*index)
-      .expect("Expected ')' after if's Expression but found nothing"); // TODO: Enhance error reporting
-    assert_eq!(open_bracket, ")", "Expected ')' after if's Expression but found '{}'", open_bracket);
-    *index += 1;
+    // Test if the current Token's value is a closing round bracket ')'
+    eat_token(")", tokens, index);
     return expression;
   }
 
@@ -87,11 +83,8 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
     let function_name: String = tokens.get(*index+1)
       .expect("Expected function name but got nothing").to_string();
 
-    // Test if the next Token's value is an opening round bracket '('
-    let open_bracket: &str = tokens.get(*index+2)
-      .expect("Expected '(' after function name but found nothing"); // TODO: Enhance error reporting
-    assert_eq!(open_bracket, "(", "Expected '(' after 'if' but found '{}'", open_bracket);
-    *index += 3; // Go past the round bracket '('
+    *index += 2; // Go past 'fun' Token and function_name
+    eat_token("(", tokens, index);
 
     // Gather function parameters
     let parameters: Vec<Parameter>  = get_function_parameters(&function_name, tokens, index);
@@ -117,10 +110,14 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
       // Get Parameter's DataType
       let datatype: &str = tokens.get(*index)
         .expect("Expected parameter datatype but got nothing");
+
+      // Return if function has no parameters
       if datatype == ")" {
         *index += 1;
         return parameters;
       }
+
+      // Test if Token is valid DataType
       if !DATATYPES.contains(&datatype) {
         panic!("Expected parameter datatype, got '{}'", datatype);
       }
@@ -159,8 +156,9 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
     *index += 1;
     let datatype_str: &str = tokens.get(*index)
       .expect("Expected return type but got nothing");
-    let datatype = get_datatype_from_str(datatype_str);
+    let datatype: DataType = get_datatype_from_str(datatype_str);
 
+    // Go over curly brace
     let open_curly: &str = tokens.get(*index+1)
       .expect("Expected open curly bracket for function but got nothing");
     if open_curly != "{" {
@@ -203,9 +201,9 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
 
   fn eat_token(expected: &str, tokens: &Vec<&str>, index: &mut usize) {
     // Increment index if the current Token matches with expected
-    let last_token: &str = tokens.get(*index)
+    let token: &str = tokens.get(*index)
       .expect("Expected Token but found nothing");
-    if last_token != expected { panic!("Expected {} but found '{}'", expected, last_token) }
+    if token != expected { panic!("Expected {} but found '{}'", expected, token) }
     *index += 1;
   }
 
