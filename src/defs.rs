@@ -180,14 +180,20 @@ pub(crate) enum StatementType {
 impl fmt::Display for Statement {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match &self.typ {
-      StatementType::Compound       => todo!(),
+      StatementType::Compound => {
+        write!(f, "{}\n", "{");
+        for statement in self.statements.as_ref().unwrap() {
+          write!(f, "  {}\n", statement);
+        }
+        write!(f, "{}", "}")
+      },
       StatementType::Conditional    => todo!(),
       StatementType::Expression     => todo!(),
       StatementType::Function       => todo!(),
       StatementType::Loop           => todo!(),
-      StatementType::NoOperation    => write!(f, "NoOp"),
+      StatementType::NoOperation => write!(f, "NoOp"),
       StatementType::Return         => {
-        write!(f, "Return {}", self.expression.as_ref().unwrap())
+        write!(f, "return {}", self.expression.as_ref().unwrap())
       },
       StatementType::Variable(typ)  => todo!()
     }
