@@ -1,5 +1,6 @@
 #[allow(dead_code)]
 use phf::phf_ordered_map;
+use std::fmt;
 
 pub(crate) const DATATYPES: [&str; 3] = [
   "char",
@@ -123,6 +124,17 @@ pub(crate) enum DataType {
   String,
 }
 
+impl fmt::Display for DataType {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      DataType::Character   => write!(f, "char"),
+      DataType::Integer     => write!(f, "int"),
+      DataType::None        => write!(f, "None"),
+      DataType::String      => write!(f, "str"),
+    }
+  }
+}
+
 #[derive(Debug, PartialEq)]
 pub(crate) struct Parameter {
   pub(crate) name: String,
@@ -132,6 +144,15 @@ pub(crate) struct Parameter {
 #[derive(Debug, PartialEq)]
 pub(crate) struct Program {
   pub(crate) statements: Vec<Statement>,
+}
+
+impl fmt::Display for Program {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    for statement in &self.statements {
+      writeln!(f, "{}", statement);
+    }
+    Ok(())
+  }
 }
 
 #[derive(Debug, PartialEq)]
@@ -167,6 +188,45 @@ pub(crate) enum StatementType {
   Variable(DataType),
 }
 
+impl fmt::Display for Statement {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match &self.typ {
+      StatementType::Compound => {
+        write!(f, "{}\n", "{").unwrap();
+        for statement in self.statements.as_ref().unwrap() {
+          write!(f, "  {}\n", statement).unwrap();
+        }
+        write!(f, "{}", "}")
+      },
+      StatementType::Conditional => {
+        let typ: &String = self.value.as_ref().unwrap();
+        let expression: &Expression = self.expression.as_ref().unwrap();
+        write!(f, "{} ({}) {}", typ, expression, self.statements.as_ref().unwrap()[0])
+      },
+      StatementType::Expression => {
+        write!(f, "{};", self.expression.as_ref().unwrap())
+      },
+      StatementType::Function => {
+        let name: &String = self.value.as_ref().unwrap();
+        write!(f, "fun {} {}", name, self.statements.as_ref().unwrap()[0])
+      },
+      StatementType::Loop => {
+        let typ: &String = self.value.as_ref().unwrap();
+        let expression: &Expression = self.expression.as_ref().unwrap();
+        write!(f, "{} ({}) {}", typ, expression, self.statements.as_ref().unwrap()[0])
+      },
+      StatementType::NoOperation => write!(f, "NoOp"),
+      StatementType::Return => {
+        write!(f, "return {};", self.expression.as_ref().unwrap())
+      },
+      StatementType::Variable(typ) => {
+        let name: &String = self.value.as_ref().unwrap();
+        write!(f, "{} {} = {};", typ, name, self.expression.as_ref().unwrap())
+      }
+    }
+  }
+}
+
 #[derive(Debug, PartialEq)]
 pub(crate) struct StatementOptions {
   pub(crate) parameters: Vec<Parameter>,
@@ -197,4 +257,45 @@ pub(crate) enum ExpressionType {
   Indexing,
   Literal(DataType),
   Unary,
+}
+
+impl fmt::Display for Expression {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match &self.typ {
+      ExpressionType::Binary => {
+        let operator: &String = self.value.as_ref().unwrap();
+        let lhs: &String = self.expressions.as_ref().unwrap()[0]
+          .value.as_ref().unwrap();
+        if self.expressions.as_ref().unwrap()[1].expressions.is_none() {
+          write!(f, "{}{}{}", lhs, operator, self.expressions.as_ref().unwrap()[1].value.as_ref().unwrap()).unwrap();
+        } else {
+          write!(f, "{}{}{}", lhs, operator, self.expressions.as_ref().unwrap()[1]).unwrap();
+        }
+        Ok(())
+      },
+      ExpressionType::Enclosure           => todo!(),
+      ExpressionType::FunctionCall => {
+        let name: &String = self.value.as_ref().unwrap();
+        write!(f, "{}(", name).unwrap();
+        for (index, expression) in self.expressions.as_ref().unwrap().iter().enumerate() {
+          if index > 0 { write!(f, ", ").unwrap() }
+          write!(f, "{}", expression).unwrap()
+        }
+        write!(f, ")")
+      },
+      ExpressionType::Identifier => write!(f, "{}", self.value.as_ref().unwrap()),
+      ExpressionType::Indexing            => todo!(),
+      ExpressionType::Literal(typ) => {
+        let value: &String = self.value.as_ref().unwrap();
+        write!(f, "{}", value)
+      },
+      ExpressionType::Unary => {
+        let operator: &String = self.value.as_ref().unwrap();
+        // TODO: Parsing Expression value
+        let value: &String = self.expressions.as_ref().unwrap()[0]
+          .value.as_ref().unwrap();
+        write!(f, "{}{}", operator, value)
+      }
+    }
+  }
 }
