@@ -124,6 +124,17 @@ pub(crate) enum DataType {
   String,
 }
 
+impl fmt::Display for DataType {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match self {
+      DataType::Character   => write!(f, "char"),
+      DataType::Integer     => write!(f, "int"),
+      DataType::None        => write!(f, "None"),
+      DataType::String      => write!(f, "str"),
+    }
+  }
+}
+
 #[derive(Debug, PartialEq)]
 pub(crate) struct Parameter {
   pub(crate) name: String,
@@ -208,7 +219,10 @@ impl fmt::Display for Statement {
       StatementType::Return => {
         write!(f, "return {};", self.expression.as_ref().unwrap())
       },
-      StatementType::Variable(typ)  => todo!()
+      StatementType::Variable(typ) => {
+        let name: &String = self.value.as_ref().unwrap();
+        write!(f, "{} {} = {};", typ, name, self.expression.as_ref().unwrap())
+      }
     }
   }
 }
@@ -273,11 +287,7 @@ impl fmt::Display for Expression {
       ExpressionType::Indexing            => todo!(),
       ExpressionType::Literal(typ) => {
         let value: &String = self.value.as_ref().unwrap();
-        if typ == &DataType::String || typ == &DataType::Character {
-          write!(f, "{:?}", value[1..value.len()-1].to_string())
-        } else {
-          write!(f, "{:?}", value)
-        }
+        write!(f, "{}", value)
       },
       ExpressionType::Unary => {
         let operator: &String = self.value.as_ref().unwrap();
