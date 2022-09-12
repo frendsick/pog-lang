@@ -229,12 +229,19 @@ pub(crate) enum ExpressionType {
 impl fmt::Display for Expression {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match &self.typ {
-      ExpressionType::Binary              => todo!(),
+      ExpressionType::Binary => {
+        let operator: &String = self.value.as_ref().unwrap();
+        let lhs: &String = self.expressions.as_ref().unwrap()[0]
+          .value.as_ref().unwrap();
+        let rhs: &String = self.expressions.as_ref().unwrap()[1]
+          .value.as_ref().unwrap();
+        write!(f, "{}{}{}", lhs, operator, rhs)
+      },
       ExpressionType::Enclosure           => todo!(),
       ExpressionType::FunctionCall        => todo!(),
       ExpressionType::Identifier          => todo!(),
       ExpressionType::Indexing            => todo!(),
-      ExpressionType::Literal(typ)       => {
+      ExpressionType::Literal(typ) => {
         let value: &String = self.value.as_ref().unwrap();
         if typ == &DataType::String || typ == &DataType::Character {
           write!(f, "{:?}", value[1..value.len()-1].to_string())
