@@ -181,9 +181,9 @@ impl fmt::Display for Statement {
   fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
     match &self.typ {
       StatementType::Compound => {
-        write!(f, "{}\n", "{");
+        write!(f, "{}\n", "{").unwrap();
         for statement in self.statements.as_ref().unwrap() {
-          write!(f, "  {}\n", statement);
+          write!(f, "  {}\n", statement).unwrap();
         }
         write!(f, "{}", "}")
       },
@@ -246,7 +246,7 @@ impl fmt::Display for Expression {
       },
       ExpressionType::Enclosure           => todo!(),
       ExpressionType::FunctionCall        => todo!(),
-      ExpressionType::Identifier          => todo!(),
+      ExpressionType::Identifier => write!(f, "{:?}", self.value.as_ref().unwrap()),
       ExpressionType::Indexing            => todo!(),
       ExpressionType::Literal(typ) => {
         let value: &String = self.value.as_ref().unwrap();
