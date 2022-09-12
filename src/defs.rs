@@ -187,7 +187,11 @@ impl fmt::Display for Statement {
         }
         write!(f, "{}", "}")
       },
-      StatementType::Conditional    => todo!(),
+      StatementType::Conditional => {
+        let typ: &String = self.value.as_ref().unwrap();
+        let expression: &Expression = self.expression.as_ref().unwrap();
+        write!(f, "{} ({}) {}", typ, expression, self.statements.as_ref().unwrap()[0])
+      },
       StatementType::Expression     => todo!(),
       StatementType::Function       => todo!(),
       StatementType::Loop           => todo!(),
