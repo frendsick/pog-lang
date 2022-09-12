@@ -1,5 +1,6 @@
 #[allow(dead_code)]
 use phf::phf_ordered_map;
+use std::fmt;
 
 pub(crate) const DATATYPES: [&str; 3] = [
   "char",
@@ -134,6 +135,15 @@ pub(crate) struct Program {
   pub(crate) statements: Vec<Statement>,
 }
 
+impl fmt::Display for Program {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    for statement in &self.statements {
+      writeln!(f, "{}", statement);
+    }
+    Ok(())
+  }
+}
+
 #[derive(Debug, PartialEq)]
 pub(crate) struct Statement {
   pub(crate) typ: StatementType,
@@ -167,6 +177,23 @@ pub(crate) enum StatementType {
   Variable(DataType),
 }
 
+impl fmt::Display for Statement {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match &self.typ {
+      StatementType::Compound       => todo!(),
+      StatementType::Conditional    => todo!(),
+      StatementType::Expression     => todo!(),
+      StatementType::Function       => todo!(),
+      StatementType::Loop           => todo!(),
+      StatementType::NoOperation    => todo!(),
+      StatementType::Return         => {
+        writeln!(f, "Return {}", self.expression.as_ref().unwrap())
+      },
+      StatementType::Variable(typ)  => todo!()
+    }
+  }
+}
+
 #[derive(Debug, PartialEq)]
 pub(crate) struct StatementOptions {
   pub(crate) parameters: Vec<Parameter>,
@@ -197,4 +224,25 @@ pub(crate) enum ExpressionType {
   Indexing,
   Literal(DataType),
   Unary,
+}
+
+impl fmt::Display for Expression {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    match &self.typ {
+      ExpressionType::Binary              => todo!(),
+      ExpressionType::Enclosure           => todo!(),
+      ExpressionType::FunctionCall        => todo!(),
+      ExpressionType::Identifier          => todo!(),
+      ExpressionType::Indexing            => todo!(),
+      ExpressionType::Literal(typ)       => {
+        let value: &String = self.value.as_ref().unwrap();
+        if typ == &DataType::String || typ == &DataType::Character {
+          write!(f, "{:?}", value[1..value.len()-1].to_string())
+        } else {
+          write!(f, "{:?}", value)
+        }
+      },
+      ExpressionType::Unary               => todo!()
+    }
+  }
 }
