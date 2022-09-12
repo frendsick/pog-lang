@@ -185,9 +185,9 @@ impl fmt::Display for Statement {
       StatementType::Expression     => todo!(),
       StatementType::Function       => todo!(),
       StatementType::Loop           => todo!(),
-      StatementType::NoOperation    => todo!(),
+      StatementType::NoOperation    => write!(f, "NoOp"),
       StatementType::Return         => {
-        writeln!(f, "Return {}", self.expression.as_ref().unwrap())
+        write!(f, "Return {}", self.expression.as_ref().unwrap())
       },
       StatementType::Variable(typ)  => todo!()
     }
