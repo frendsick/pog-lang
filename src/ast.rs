@@ -194,7 +194,19 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
   fn get_return_statement(tokens: &Vec<&str>, index: &mut usize) -> Statement {
     *index += 1; // Go past 'return' Token
     let expression: Expression = get_next_expression(tokens, index);
+
+    // Test if the current Token is ';' and increment index
+    eat_token(";", tokens, index);
+
     return Statement::new(StatementType::Return, None, None, Some(expression), None)
+  }
+
+  fn eat_token(expected: &str, tokens: &Vec<&str>, index: &mut usize) {
+    // Increment index if the current Token matches with expected
+    let last_token: &str = tokens.get(*index)
+      .expect("Expected Token but found nothing");
+    if last_token != expected { panic!("Expected {} but found '{}'", expected, last_token) }
+    *index += 1;
   }
 
   fn get_variable_definition_statement(tokens: &Vec<&str>, index: &mut usize, datatype: DataType) -> Statement {
@@ -212,17 +224,26 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
 
     // Go past the DataType, variable name Identifier and assignment Tokens
     *index += 3;
+    let expression: Expression = get_next_expression(tokens, index);
+
+    // Test if the current Token is ';' and increment index
+    eat_token(";", tokens, index);
+
     Statement {
       typ: StatementType::Variable(datatype),
       value: Some(variable_name),
       options: None,
-      expression: Some(get_next_expression(tokens, index)),
+      expression: Some(expression),
       statements: None
     }
   }
 
   fn get_expression_statement(tokens: &Vec<&str>, index: &mut usize) -> Statement {
     let expression: Expression = get_next_expression(tokens, index);
+
+    // Test if the current Token is ';' and increment index
+    eat_token(";", tokens, index);
+
     Statement::new(StatementType::Expression, None, None, Some(expression), None)
   }
 
@@ -244,7 +265,6 @@ pub(crate) fn generate_ast(tokens: &Vec<&str>) -> Program {
       if lookahead_value == "(" {
         return get_function_call_expression(first_token.to_string(), tokens, index);
       }
-      if lookahead_value == ";" { *index += 1; }
       return get_literal_expression(&first_token);
     }
 
