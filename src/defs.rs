@@ -267,9 +267,9 @@ impl fmt::Display for Expression {
         let lhs: &String = self.expressions.as_ref().unwrap()[0]
           .value.as_ref().unwrap();
         if self.expressions.as_ref().unwrap()[1].expressions.is_none() {
-          write!(f, "{}{}{}", lhs, operator, self.expressions.as_ref().unwrap()[1].value.as_ref().unwrap()).unwrap();
+          write!(f, "{} {} {}", lhs, operator, self.expressions.as_ref().unwrap()[1].value.as_ref().unwrap()).unwrap();
         } else {
-          write!(f, "{}{}{}", lhs, operator, self.expressions.as_ref().unwrap()[1]).unwrap();
+          write!(f, "{} {} {}", lhs, operator, self.expressions.as_ref().unwrap()[1]).unwrap();
         }
         Ok(())
       },
