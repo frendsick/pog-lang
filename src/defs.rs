@@ -1,5 +1,5 @@
 #[allow(dead_code)]
-use phf::phf_ordered_map;
+use phf::{phf_map,phf_ordered_map};
 use std::fmt;
 
 pub(crate) const DATATYPES: [&str; 3] = [
@@ -35,6 +35,29 @@ pub(crate) const BINARY_OPERATORS: [&str; 15] = [
   "<",
   "<=",
 ];
+
+// https://en.cppreference.com/w/c/language/operator_precedence
+pub(crate) const OPERATOR_PRECEDENCE: phf::Map<&str, u8> = phf_map!(
+  "++"    => 2,  // TODO: Differentiate prefix and postfix increment
+  "--"    => 2,  // TODO: Differentiate prefix and postfix decrement
+  "!"     => 2,
+  "&"     => 2,
+  "*"     => 3,
+  "/"     => 3,
+  "+"     => 4,
+  "-"     => 4,
+  ">"     => 6,
+  ">="    => 6,
+  "<"     => 6,
+  "<="    => 6,
+  "=="    => 7,
+  "!="    => 7,
+  "="     => 14,
+  "+="    => 14,
+  "-="    => 14,
+  "*="    => 14,
+  "/="    => 14,
+);
 
 pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_map!(
   // Whitespace
