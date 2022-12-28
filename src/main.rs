@@ -3,28 +3,27 @@ mod defs;
 mod lexer;
 mod utils;
 
-use std::fs;
 use ast::generate_ast;
 use defs::Program;
+use std::fs;
 
 use lexer::Parser;
 fn main() {
-  // TODO: Parse command line arguments
+    // TODO: Parse command line arguments
 
-  // Read code files
-  // TODO: Enable including code from multiple files
-  let code: String = fs::read_to_string("test.pog")
-    .expect("Failed to read the file");
+    // Read code files
+    // TODO: Enable including code from multiple files
+    let code: String = fs::read_to_string("test.pog").expect("Failed to read the file");
 
-  // Parse code to Tokens
-  let mut parser: Parser = Parser::init(code.as_str());
-  let tokens: Vec<&str> = parser.parse();
+    // Parse code to Tokens
+    let mut parser: Parser = Parser::init(code.as_str());
+    let tokens: Vec<&str> = parser.parse();
 
-  // Generate abstract syntax tree (AST)
-  let program: Program = generate_ast(&tokens);
-  dbg!(&program);
+    // Generate abstract syntax tree (AST)
+    let program: Program = generate_ast(&tokens);
+    dbg!(&program);
 
-  // TODO: Type check Program
-  // TODO: Generate assembly code
-  // TODO: Compile executable
+    // TODO: Type check Program
+    // TODO: Generate assembly code
+    // TODO: Compile executable
 }
