@@ -1,8 +1,10 @@
+mod assembly;
 mod ast;
 mod defs;
 mod lexer;
 mod utils;
 
+use assembly::generate_assembly;
 use ast::generate_ast;
 use defs::Program;
 use std::fs;
@@ -25,5 +27,7 @@ fn main() {
 
     // TODO: Type check Program
     // TODO: Generate assembly code
+    let assembly: String = generate_assembly(&program);
+    print!("{}", assembly);
     // TODO: Compile executable
 }
