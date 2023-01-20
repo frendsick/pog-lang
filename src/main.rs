@@ -4,8 +4,7 @@ mod lexer;
 mod utils;
 
 use ast::generate_ast;
-use defs::Program;
-use std::fs;
+use defs::{Token, Program};
 
 use lexer::Parser;
 fn main() {
@@ -13,15 +12,15 @@ fn main() {
 
     // Read code files
     // TODO: Enable including code from multiple files
-    let code: String = fs::read_to_string("test.pog").expect("Failed to read the file");
-
+    const CODE_FILE: &str = "test.pog";
     // Parse code to Tokens
-    let mut parser: Parser = Parser::init(code.as_str());
-    let tokens: Vec<&str> = parser.parse();
+    let mut parser: Parser = Parser::init(CODE_FILE);
+    let tokens: Vec<Token> = parser.parse();
 
+    dbg!(&tokens);
     // Generate abstract syntax tree (AST)
-    let program: Program = generate_ast(&tokens);
-    dbg!(&program);
+    // let program: Program = generate_ast(&tokens);
+    // dbg!(&program);
 
     // TODO: Type check Program
     // TODO: Generate assembly code

@@ -77,6 +77,20 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
   r"^[a-zA-Z_$][a-zA-Z_$0-9]*"  => TokenType::Identifier,
 );
 
+
+#[derive(Debug, PartialEq)]
+pub(crate) struct Token {
+    pub(crate) value: String,
+    pub(crate) location: Location,
+}
+
+#[derive(Debug, PartialEq)]
+pub(crate) struct Location {
+    pub(crate) file: String,
+    pub(crate) row: usize,
+    pub(crate) column: usize,
+}
+
 #[derive(Debug, PartialEq)]
 pub(crate) enum TokenType {
     AssignmentOperator,

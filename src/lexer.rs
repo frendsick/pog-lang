@@ -1,4 +1,4 @@
-use crate::defs::{TokenType, TOKEN_REGEXES};
+use crate::defs::{Token, TokenType, Location, TOKEN_REGEXES};
 use regex::{Captures, Match, Regex};
 
 #[derive(Debug)]
@@ -7,16 +7,16 @@ pub(crate) struct Parser<'a> {
 }
 
 impl<'a> Parser<'a> {
-    pub(crate) fn init(code: &'a str) -> Self {
+    pub(crate) fn init(file: &'a str) -> Self {
         Self {
-            tokenizer: Tokenizer::init(code),
+            tokenizer: Tokenizer::init(file),
         }
     }
 
-    pub(crate) fn parse(&mut self) -> Vec<&str> {
-        let mut tokens: Vec<&str> = vec![];
+    pub(crate) fn parse(&mut self) -> Vec<Token> {
+        let mut tokens: Vec<Token> = vec![];
         loop {
-            let token: Option<&str> = self.tokenizer.get_next_token();
+            let token: Option<Token> = self.tokenizer.get_next_token();
             if token.is_none() {
                 break;
             }
@@ -28,14 +28,24 @@ impl<'a> Parser<'a> {
 
 #[derive(Debug)]
 struct Tokenizer<'a> {
-    code: &'a str,
+    code: String,
+    file: &'a str,
+    row: usize,
+    column: usize,
     cursor: usize,
 }
 
 impl<'a> Tokenizer<'a> {
-    fn init(code: &'a str) -> Self {
+    fn init(file: &'a str) -> Self {
+        let code: String = std::fs::read_to_string("test.pog")
+            .expect("Failed to read the file")
+            .as_str()
+            .to_string();
         Self {
             code: code,
+            file: file,
+            row: 1,
+            column: 1,
             cursor: 0,
         }
     }
@@ -44,7 +54,7 @@ impl<'a> Tokenizer<'a> {
         self.cursor < self.code.len()
     }
 
-    fn get_next_token(&mut self) -> Option<&'a str> {
+    fn get_next_token(&mut self) -> Option<Token> {
         if !self.has_more_tokens() {
             return None;
         }
@@ -61,6 +71,24 @@ impl<'a> Tokenizer<'a> {
                     token_match = whole_match;
                 }
 
+                // Save the old row and column
+                let token_row: usize = self.row;
+                let token_column: usize = self.column;
+
+                // Calculate the new row and column after the string
+                let match_str = token_match
+                    .unwrap()
+                    .as_str();
+                let newline_count = match_str
+                    .matches("\n")
+                    .count();
+                if newline_count > 0 {
+                    self.column = match_str.len() - match_str.rfind("\n").unwrap_or(0);
+                } else {
+                    self.column += match_str.len();
+                }
+                self.row += newline_count;
+
                 // Move cursor to the end of the parsed Token
                 self.cursor += whole_match.unwrap().end();
 
@@ -68,7 +96,14 @@ impl<'a> Tokenizer<'a> {
                 if token_type == &TokenType::None {
                     return self.get_next_token();
                 }
-                return Some(token_match.unwrap().as_str());
+                return Some(Token{
+                    value: token_match.unwrap().as_str().to_string(),
+                    location: Location {
+                        file: self.file.to_string(),
+                        row: token_row,
+                        column: token_column,
+                    },
+                });
             }
         }
 
