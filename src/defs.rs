@@ -81,6 +81,7 @@ pub(crate) const TOKEN_REGEXES: phf::OrderedMap<&str, TokenType> = phf_ordered_m
 #[derive(Debug, PartialEq)]
 pub(crate) struct Token {
     pub(crate) value: String,
+    pub(crate) typ: TokenType,
     pub(crate) location: Location,
 }
 
@@ -91,7 +92,7 @@ pub(crate) struct Location {
     pub(crate) column: usize,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub(crate) enum TokenType {
     AssignmentOperator,
     BinaryOperator,
@@ -104,7 +105,7 @@ pub(crate) enum TokenType {
     None,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub(crate) enum DataType {
     Character,
     Integer,

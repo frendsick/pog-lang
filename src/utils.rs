@@ -11,12 +11,12 @@ pub(crate) fn get_datatype_from_str(datatype_str: &str) -> DataType {
     }
 }
 
-pub(crate) fn get_token_type(token: &str) -> &TokenType {
+pub(crate) fn get_token_type(token: &str) -> TokenType {
     for (regex, token_type) in TOKEN_REGEXES.entries() {
         // Take match from capture group if it is explicitly specified
         let is_match: bool = Regex::new(regex).unwrap().is_match(token);
         if is_match {
-            return token_type;
+            return token_type.clone();
         }
     }
     panic!("Did not get TokenType for '{}'", token);

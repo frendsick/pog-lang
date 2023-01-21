@@ -1,4 +1,5 @@
 use crate::defs::{Token, TokenType, Location, TOKEN_REGEXES};
+use crate::utils::get_token_type;
 use regex::{Captures, Match, Regex};
 
 #[derive(Debug)]
@@ -97,7 +98,8 @@ impl<'a> Tokenizer<'a> {
                     return self.get_next_token();
                 }
                 return Some(Token{
-                    value: token_match.unwrap().as_str().to_string(),
+                    value: match_str.to_string(),
+                    typ: get_token_type(match_str),
                     location: Location {
                         file: self.file.to_string(),
                         row: token_row,
